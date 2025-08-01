@@ -1,0 +1,651 @@
+/* Members.css - Página de Gerenciar Membros - Versão Refinada */
+
+/* Reset e configurações base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Container principal da página */
+.members-container {
+  height: 100vh;
+  width: 100vw;
+  background-color: #f5f7fa;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  font-family: sans-serif;
+}
+
+/* Header azul superior */
+.members-header {
+  background-color: #4a6da7;
+  padding: 15px 20px;
+  color: white;
+  flex-shrink: 0;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  box-shadow: 0 4px 20px rgba(74, 109, 167, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/*Estilo para alterar usuário/logado como */
+.user-login-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f1f5f9;
+  padding: 12px 16px;
+  margin: 16px 0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+}
+
+.logged-user strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.switch-user-button {
+  background-color: transparent;
+  border: none;
+  color: #4a6da7;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.switch-user-button:hover {
+  text-decoration: underline;
+}
+
+.members-back-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.members-back-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.members-header h1 {
+  font-size: 18px;
+  color: white;
+  font-weight: normal;
+  margin: 0;
+}
+
+/* Conteúdo principal */
+.members-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Header da seção com busca e botão adicionar */
+.members-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+/* Campo de busca - SEM ÍCONE DE LUPA */
+.search-container {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #4a6da7;
+  box-shadow: 0 0 0 3px rgba(74, 109, 167, 0.1);
+}
+
+.search-input::placeholder {
+  color: #a0aec0;
+}
+
+/* Botão adicionar membro - DESIGN MINIMALISTA */
+.add-member-button {
+  background-color: #4a6da7;
+  border: none;
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: normal;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 1px 3px rgba(74, 109, 167, 0.2);
+}
+
+.add-member-button:hover {
+  background-color: #3a5a94;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(74, 109, 167, 0.3);
+}
+
+/* Lista de membros */
+.members-list {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Card de membro individual */
+.member-card {
+  padding: 20px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.member-card:last-child {
+  border-bottom: none;
+}
+
+.member-card:hover {
+  background-color: #f8fafc;
+}
+
+/* Informações do membro */
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+/* Avatar do membro */
+.member-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #4a6da7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(74, 109, 167, 0.2);
+}
+
+/* Detalhes do membro */
+.member-details {
+  flex: 1;
+}
+
+.member-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+}
+
+.member-role {
+  font-size: 14px;
+  color: #718096;
+  margin: 0 0 8px 0;
+  font-weight: 500;
+}
+
+.member-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.contact-icon {
+  font-size: 14px;
+  color: #718096;
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  color: #4a5568; /* cinza escuro — ajuste conforme a paleta do projeto */
+}
+
+
+
+/* Ações do membro */
+.member-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.action-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-button {
+  color: #ffffff;
+}
+
+.edit-button:hover {
+  background-color: #ebf4ff;
+  color: #3a5a94;
+}
+
+.delete-button {
+  color: #ffffff;
+}
+
+.delete-button:hover {
+  background-color: #ffa0a0;
+  color: #c53030;
+}
+
+/* Estado vazio */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #718096;
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state-text {
+  font-size: 16px;
+  font-style: italic;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: slideIn 0.3s ease-out;
+}
+
+.modal-header {
+  padding: 24px 24px 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: #f7fafc;
+  color: #4a5568;
+}
+
+.modal-body {
+  padding: 0 24px 24px 24px;
+}
+
+/* Formulário */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 6px;
+}
+
+.required {
+  color: #e53e3e;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #4a6da7;
+  box-shadow: 0 0 0 3px rgba(74, 109, 167, 0.1);
+}
+
+.form-input::placeholder {
+  color: #a0aec0;
+}
+
+/* Botões do formulário */
+.form-actions {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.submit-button {
+  width: 100%;
+  background-color: #4a6da7;
+  border: none;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-button:hover {
+  background-color: #3a5a94;
+  transform: translateY(-1px);
+}
+
+.form-note {
+  font-size: 12px;
+  color: #718096;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .members-header {
+    padding: 12px 15px;
+  }
+  
+  .members-header h1 {
+    font-size: 16px;
+  }
+  
+  .members-content {
+    padding: 15px;
+  }
+  
+  .members-section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .search-container {
+    max-width: none;
+  }
+  
+  .add-member-button {
+    align-self: flex-end;
+  }
+  
+  .member-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+  }
+  
+  .member-actions {
+    align-self: flex-end;
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .modal-content {
+    margin: 10px;
+    max-width: none;
+  }
+  
+  .modal-header {
+    padding: 20px 20px 0 20px;
+  }
+  
+  .modal-body {
+    padding: 0 20px 20px 20px;
+  }
+  
+  .contact-item {
+    font-size: 12px;
+  }
+  
+  .member-name {
+    font-size: 15px;
+  }
+  
+  .member-role {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .members-header {
+    padding: 10px 12px;
+  }
+  
+  .members-header h1 {
+    font-size: 14px;
+  }
+  
+  .members-content {
+    padding: 12px;
+  }
+  
+  .member-card {
+    padding: 12px;
+  }
+  
+  .member-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+  
+  .modal-header {
+    padding: 16px 16px 0 16px;
+  }
+  
+  .modal-body {
+    padding: 0 16px 16px 16px;
+  }
+  
+  .modal-title {
+    font-size: 18px;
+  }
+}
+
+/* Scrollbar customizada */
+.members-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.members-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.members-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.members-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Estados de foco para acessibilidade */
+.members-back-button:focus,
+.add-member-button:focus,
+.action-button:focus,
+.modal-close:focus,
+.submit-button:focus {
+  outline: 2px solid #4a6da7;
+  outline-offset: 2px;
+}
+
+/* Transições suaves */
+.member-card,
+.action-button,
+.form-input,
+.submit-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Prevenção de animações para usuários que preferem movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

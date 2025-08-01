@@ -1,0 +1,503 @@
+/* Reports.css - Página de Relatórios */
+
+.reports-page-container {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden; /* Evita scroll horizontal desnecessário */
+}
+
+/* Header azul consistente */
+.reports-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: #4a6da7;
+  background-color: #4a6da7;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0; /* Impede que o header encolha */
+
+
+}
+
+.reports-back-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.reports-back-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.reports-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Seção de filtros */
+.filters-section {
+  background: white;
+  margin: 2rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.filters-header h2 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.clear-filters-btn,
+.export-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.clear-filters-btn {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+.clear-filters-btn:hover {
+  background-color: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.export-btn {
+  background-color: #4a6da7;
+  color: white;
+}
+
+.export-btn:hover {
+  background-color: #3a5998;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 109, 167, 0.3);
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.filter-group select,
+.filter-group input {
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  outline: none;
+  border-color: #4a6da7;
+  box-shadow: 0 0 0 3px rgba(74, 109, 167, 0.1);
+}
+
+.filter-group select:hover,
+.filter-group input:hover {
+  border-color: #cbd5e0;
+}
+
+/* Seção de resumo */
+.summary-cards-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 cards lado a lado */
+  gap: 1rem;
+  margin: 2rem;
+  max-width: 100%;
+  box-sizing: border-box;
+  
+}
+
+.summary-card {
+  height: 130px; /* ou ajuste conforme necessário */
+  width: 100%;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.summary-card h3 {
+  margin: 0 0 0.5rem 0;
+  color: #4a5568;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-card p {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4a6da7;
+}
+
+/* Seção de gráficos */
+.charts-section {
+  margin: 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.chart-container {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-height: 400px; /* Garante altura mínima para os gráficos */
+}
+
+.chart-container.full-width {
+  grid-column: 1 / -1;
+}
+
+.chart-container h3 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+/* Seção da tabela - CORRIGIDO PARA RESPONSIVIDADE */
+.table-section {
+  margin: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  padding: 1.5rem; /* Adicionado padding */
+}
+
+.table-section h3 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.table-section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  overflow-x: auto; /* Permite scroll horizontal se necessário */
+  display: block; /* Necessário para overflow-x funcionar */
+  white-space: nowrap; /* Evita quebra de linha nas células */
+}
+
+.table-section thead,
+.table-section tbody,
+.table-section tr {
+  display: table; /* Restaura o comportamento de tabela */
+  width: 100%;
+  table-layout: fixed; /* Garante larguras consistentes */
+}
+
+.table-section th {
+  background-color: #f7fafc;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+  width: auto; /* Permite que as colunas se ajustem */
+}
+
+.table-section td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #2d3748;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Adiciona ... quando o texto é muito longo */
+}
+
+.table-section tbody tr:hover {
+  background-color: #f7fafc;
+}
+
+.table-section tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 3rem;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+.no-data-message h3 {
+  margin-bottom: 0.5rem;
+  color: #4a5568;
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-container.full-width {
+    grid-column: 1;
+  }
+  
+  /* Tabela responsiva para telas médias */
+  .table-section {
+    overflow-x: auto;
+  }
+  
+  .table-section table {
+    min-width: 800px; /* Largura mínima para manter legibilidade */
+  }
+}
+
+@media (max-width: 1024px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-container.full-width {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .reports-page-container {
+    margin: 0;
+  }
+  
+  .filters-section,
+  .summary-cards-container,
+  .charts-section,
+  .table-section {
+    margin: 1rem;
+  }
+  
+  .filters-section {
+    grid-template-columns: 1fr; /* Uma coluna em mobile */
+  }
+  
+  .filter-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .summary-cards-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .chart-container {
+    padding: 1rem;
+    min-height: 300px; /* Altura menor em mobile */
+  }
+  
+  /* Tabela responsiva para mobile */
+  .table-section table {
+    font-size: 0.75rem;
+    min-width: 600px; /* Largura mínima menor para mobile */
+  }
+  
+  .table-section th,
+  .table-section td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .reports-header {
+    padding: 1rem;
+  }
+  
+  .reports-header h1 {
+    font-size: 1.25rem;
+  }
+  
+  .summary-cards-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-card p {
+    font-size: 1.5rem;
+  }
+  
+  .clear-filters-btn,
+  .export-btn {
+    justify-content: center;
+  }
+  
+  /* Tabela muito compacta para telas pequenas */
+  .table-section table {
+    font-size: 0.7rem;
+    min-width: 500px;
+  }
+  
+  .table-section th,
+  .table-section td {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+/* Animações suaves */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.summary-card,
+.chart-container,
+.filters-section,
+.table-section {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Estados de loading para gráficos */
+.chart-container:empty::before {
+  content: "Carregando gráfico...";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+/* Customização dos tooltips dos gráficos */
+.recharts-tooltip-wrapper {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.recharts-default-tooltip {
+  border-radius: 8px !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Melhorias de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible para acessibilidade */
+.reports-back-button:focus-visible,
+.clear-filters-btn:focus-visible,
+.export-btn:focus-visible {
+  outline: 2px solid #4a6da7;
+  outline-offset: 2px;
+}
+
+.filter-group select:focus-visible,
+.filter-group input:focus-visible {
+  outline: 2px solid #4a6da7;
+  outline-offset: 2px;
+}
+
+/* Correção específica para zoom */
+@media (min-width: 1400px) {
+  .table-section table {
+    width: 100%;
+    table-layout: auto; /* Permite que as colunas se ajustem automaticamente */
+  }
+  
+  .table-section th,
+  .table-section td {
+    white-space: normal; /* Permite quebra de linha em telas grandes */
+    word-wrap: break-word;
+  }
+}
+
+/* Garantir que a tabela seja sempre visível */
+.table-section {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 1 !important;
+}

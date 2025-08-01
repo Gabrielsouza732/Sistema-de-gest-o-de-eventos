@@ -1,0 +1,629 @@
+/* Estilos gerais do KanbanCard */
+.kanban-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+  min-width: 250px;
+  min-height: 140px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #4a6da7;
+  transition: all 0.3s ease;
+  cursor: grab;
+  position: relative;
+  font-family: sans-serif;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Cores da barra lateral por status */
+.kanban-card.Aguardando {
+  border-left-color: #f6ad55;
+}
+
+.kanban-card.Em\ Andamento {
+  border-left-color: #4299e1;
+}
+
+.kanban-card.Concluído {
+  border-left-color: #48bb78;
+}
+
+/* Header do Card */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.card-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+  line-height: 1.4;
+  flex: 1;
+  padding-right: 10px;
+}
+
+/* Estilos para o botão de expansão */
+.card-expand-button {
+  background: transparent !important;
+  border: none !important;
+  font-size: 16px;
+  color: #4a5568;
+  cursor: pointer;
+  padding: 0;
+  width: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  transition: all 0.2s ease;
+  font-weight: normal;
+}
+
+.card-expand-button:hover {
+  background-color: transparent !important;
+  color: #2d3748;
+  border: none !important;
+  transform: scale(1.2);
+}
+
+/* Informações principais */
+.card-info {
+  margin-bottom: 18px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.info-icon {
+  margin-right: 10px;
+  font-size: 15px;
+}
+
+.info-label {
+  color: #718096;
+  margin-right: 4px;
+  font-weight: 500;
+}
+
+.info-value {
+  color: #2d3748;
+  font-weight: 400;
+}
+
+.priority-badge {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+/* Estilos para drag and drop */
+.kanban-card.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para colunas droppable */
+.droppable-column {
+  width: 100%;
+  min-height: 300px;
+}
+
+.empty-column-drop-zone {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #cbd5e0;
+  border-radius: 12px;
+  margin: 16px 8px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  background-color: #f7fafc;
+  text-align: center;
+}
+
+.empty-column-drop-zone:hover {
+  border-color: #4299e1;
+  background-color: #ebf8ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.15);
+}
+
+.drop-hint {
+  font-size: 12px;
+  color: #718096;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.no-kanban-results {
+  color: #a0aec0;
+  font-size: 14px;
+  margin: 0 0 4px 0;
+}
+
+/* Estados de drag over para colunas vazias */
+.droppable-column[data-drag-over="true"] .empty-column-drop-zone {
+  border-color: #38a169;
+  background-color: #f0fff4;
+  border-style: solid;
+  border-width: 3px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .kanban-card {
+    padding: 16px;
+    min-width: 220px;
+    min-height: 130px;
+  }
+  
+  .card-title {
+    font-size: 15px;
+  }
+  
+  .info-item {
+    font-size: 13px;
+  }
+  
+  .empty-column-drop-zone {
+    min-height: 120px;
+    padding: 16px;
+    margin: 12px 4px;
+  }
+  
+  .drop-hint {
+    font-size: 11px;
+  }
+  
+  .no-kanban-results {
+    font-size: 13px;
+  }
+}
+
+/* Estilos para o modal */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  z-index: 10;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.5em;
+  color: #333;
+  flex-grow: 1;
+  cursor: text;
+}
+
+.modal-title-input {
+  font-size: 1.5em;
+  font-weight: bold;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-close-button,
+.modal-delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-button {
+  color: #666;
+}
+
+.modal-close-button:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.modal-delete-button {
+  color: #e53e3e; /* Vermelho */
+}
+
+.modal-delete-button:hover {
+  background-color: #fed7d7; /* Vermelho claro ao passar o mouse */
+  color: #c53030; /* Vermelho mais escuro */
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modal-section {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  border: 1px solid #eee;
+}
+
+.modal-section-title {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.2em;
+  color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-description {
+  font-size: 0.95em;
+  line-height: 1.6;
+  color: #555;
+  min-height: 40px;
+  cursor: text;
+}
+
+.modal-description-textarea {
+  width: calc(100% - 10px);
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95em;
+  min-height: 80px;
+  resize: vertical;
+}
+
+.modal-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.modal-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.modal-detail-icon {
+  width: 20px;
+  height: 20px;
+  color: #888;
+}
+
+.modal-detail-label {
+  font-weight: bold;
+  color: #333;
+}
+
+.modal-detail-value {
+  flex-grow: 1;
+  cursor: text;
+}
+
+.modal-detail-input {
+  flex-grow: 1;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* Membros */
+.modal-members-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.modal-member-tag {
+  display: flex;
+  align-items: center;
+  background-color: #e0e7ff;
+  border-radius: 20px;
+  padding: 5px 10px 5px 5px;
+  font-size: 0.85em;
+  color: #333;
+}
+
+.modal-member-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #6366f1;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+
+.modal-add-member-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 15px;
+  cursor: pointer;
+  font-size: 0.85em;
+  transition: background-color 0.2s ease;
+}
+
+.modal-add-member-button:hover {
+  background-color: #45a049;
+}
+
+.modal-member-dropdown {
+  position: absolute;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  min-width: 200px;
+  max-height: 250px;
+  overflow-y: auto;
+  top: calc(100% + 5px);
+  right: 0;
+  padding: 5px;
+}
+
+.modal-member-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: 6px;
+}
+
+.modal-member-option:hover {
+  background-color: #f0f0f0;
+}
+
+.modal-member-option .modal-member-avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 0.9em;
+}
+
+.modal-member-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-member-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.modal-member-email {
+  font-size: 0.8em;
+  color: #777;
+}
+
+.modal-member-loading,
+.modal-no-members {
+  padding: 10px;
+  text-align: center;
+  color: #888;
+  font-style: italic;
+}
+
+/* Checklist */
+.modal-expand-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 0.9em;
+  margin-left: 10px;
+}
+
+.modal-checklist-items {
+  margin-top: 10px;
+}
+
+.modal-checklist-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.95em;
+  color: #444;
+}
+
+.modal-checklist-item input[type="checkbox"] {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.modal-checklist-responsible {
+  margin-left: 8px;
+  font-size: 0.85em;
+  color: #777;
+  background-color: #e6e6e6;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* Comentários */
+.add-comment-section {
+  margin-top: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.comment-input-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1em;
+  flex-shrink: 0;
+}
+
+.comment-input {
+  flex-grow: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95em;
+  resize: vertical;
+}
+
+.add-comment-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 0.95em;
+  transition: background-color 0.2s ease;
+  float: right;
+}
+
+.add-comment-button:hover {
+  background-color: #0056b3;
+}
+
+.comments-list {
+  margin-top: 20px;
+  clear: both;
+}
+
+.comment-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  background-color: #f0f2f5;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.comment-content {
+  flex-grow: 1;
+}
+
+.comment-author {
+  font-weight: bold;
+  color: #333;
+  margin-right: 8px;
+}
+
+.comment-timestamp {
+  font-size: 0.8em;
+  color: #888;
+}
+
+.comment-text {
+  margin-top: 5px;
+  font-size: 0.9em;
+  color: #555;
+  line-height: 1.5;
+}
+
+.no-comments {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 20px;
+}
+
+/* Estilos para o card sendo arrastado */
+.kanban-card.dragging {
+  opacity: 0.5;
+  border: 2px dashed #007bff;
+}
+
+/* Media Queries para responsividade */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+
+  .modal-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

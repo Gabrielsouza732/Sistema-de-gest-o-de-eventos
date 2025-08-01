@@ -1,0 +1,163 @@
+/* SearchFilter.css - Componente de pesquisa */
+
+.search-filter-container {
+  padding: 8px 16px;
+  background-color: white;
+  border-bottom: 1px solid #e0e0e0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+
+.search-icon {
+  display: none; /* Oculta a lupa */
+}
+
+
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  color: #333;
+  padding: 8px 0;
+  height: 100%;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+}
+
+.search-input::placeholder {
+  color: #999;
+  opacity: 1;
+}
+
+.search-input:focus::placeholder {
+  color: #bbb;
+}
+
+.clear-button {
+  background: transparent !important;
+  border: none !important;
+  padding: 4px;
+  cursor: pointer;
+  color: #999;
+  font-size: 14px;
+  border-radius: 0 !important; /* Garante que não haja borda arredondada */
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 4px;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: none !important; /* Remove todas as transições */
+}
+
+.clear-button:hover,
+.clear-button:focus-visible {
+  background-color: transparent !important; 
+  color: #666;
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  transform: none !important; /* Remove qualquer transformação */
+}
+
+.clear-button:active {
+  transform: scale(0.95);
+}
+
+/* Animações */
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .search-filter-container {
+    padding: 6px 12px;
+  }
+  
+  .search-container {
+    height: 36px;
+    padding: 0 10px;
+  }
+  
+  .search-input {
+    font-size: 14px;
+  }
+  
+  .search-icon {
+    font-size: 14px;
+    margin-right: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-filter-container {
+    padding: 4px 8px;
+  }
+  
+  .search-container {
+    height: 34px;
+    padding: 0 8px;
+  }
+  
+  .search-input {
+    font-size: 14px;
+  }
+}
+
+
+/* Melhorias de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  .search-container,
+  .clear-button {
+    transition: none !important;
+  }
+  
+  .clear-button {
+    animation: none !important;
+  }
+}
+
+/* Focus visible para acessibilidade */
+.search-input:focus-visible {
+  outline: none; /* O outline é gerenciado pelo container */
+}
+
+/* Garantir que o input não seja cortado */
+.search-input {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Estilo para navegadores WebKit */
+.search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search-input::-webkit-search-decoration {
+  display: none;
+}
+
+/* Estilo para Firefox */
+.search-input::-moz-placeholder {
+  opacity: 1;
+}
+
+/* Garantir que o container não quebre o layout */
+.search-filter-container {
+  min-width: 0;
+  flex-shrink: 0;
+}

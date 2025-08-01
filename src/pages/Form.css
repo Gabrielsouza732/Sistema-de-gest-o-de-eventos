@@ -1,0 +1,346 @@
+/* Reset e configurações base */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: sans-serif;
+  background-color: #f5f7fa;
+  margin: 0;
+  padding: 0;
+}
+
+/* Container principal do formulário - otimizado para viewport */
+.form-container {
+  width: 100vw;
+  height: 100vh;
+  background: white;
+  padding: 20px 0;
+  position: relative;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.form-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #4a6da7;
+}
+
+/* Título compacto */
+h2 {
+  color: #4a6da7;
+  margin-bottom: 15px;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  position: relative;
+}
+
+/* Formulário principal - layout compacto */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  height: auto;
+  padding: 0 20px;
+}
+
+/* Fieldsets compactos */
+fieldset {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 15px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  margin-bottom: 10px;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* Layout em grid para fieldsets maiores */
+.form-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+legend {
+  font-weight: 600;
+  font-size: 16px;
+  color: #4a6da7;
+  padding: 0 10px;
+  margin-bottom: 10px;
+}
+
+/* Labels compactos */
+label {
+  display: block;
+  font-weight: 500;
+  margin: 10px 0 5px;
+  color: #2d3748;
+  font-size: 13px;
+}
+
+/* Campos compactos */
+input, textarea, select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: white;
+  font-family: inherit;
+}
+
+textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #4a6da7;
+  box-shadow: 0 0 0 2px rgba(74, 109, 167, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Responsividade para .row */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+/* Botões compactos */
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  gap: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  position: relative;
+  min-width: 120px;
+  transition: all 0.3s ease;
+}
+
+.cancel {
+  background-color: #f7fafc;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+}
+
+.cancel:hover {
+  background-color: #edf2f7;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.submit {
+  background-color: #4a6da7;
+  color: white;
+}
+
+.submit:hover {
+  transform: translateY(-1px);
+  background-color: #3a5a94;
+}
+
+/* Nota compacta */
+.note {
+  font-size: 12px;
+  color: #718096;
+  text-align: center;
+  font-style: italic;
+  margin-top: 10px;
+}
+
+/* Indicação de campos obrigatórios */
+label:has(+ input[name="title"])::after,
+label:has(+ textarea[name="description"])::after,
+label:has(+ input[name="startDate"])::after {
+  content: ' *';
+  color: #e53e3e;
+  font-weight: bold;
+}
+
+/* Validação */
+input:invalid:not(:placeholder-shown),
+textarea:invalid:not(:placeholder-shown),
+select:invalid:not(:placeholder-shown) {
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.1);
+}
+
+input:valid:not(:placeholder-shown),
+textarea:valid:not(:placeholder-shown),
+select:valid:not(:placeholder-shown) {
+  border-color: #d8e0ec;
+}
+
+/* Responsividade para tablets */
+@media (max-width: 1024px) {
+  .form-layout {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .form-container {
+    padding: 15px 0;
+  }
+  
+  form {
+    padding: 0 15px;
+  }
+  
+  h2 {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+  
+  fieldset {
+    padding: 12px;
+  }
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+  .row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .form-container {
+    padding: 10px 0;
+  }
+  
+  form {
+    padding: 0 10px;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  fieldset {
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+  
+  legend {
+    font-size: 15px;
+  }
+  
+  label {
+    margin: 8px 0 4px;
+    font-size: 12px;
+  }
+  
+  input, textarea, select {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+}
+
+/* Layout específico para desktop - todos os fieldsets visíveis */
+@media (min-width: 1025px) {
+  .form-container {
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  form {
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+  
+  /* Layout em duas colunas para aproveitar melhor o espaço */
+  .form-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    height: 100%;
+  }
+  
+  /* Primeiro fieldset ocupa as duas colunas */
+  fieldset:first-child {
+    grid-column: 1 / -1;
+  }
+  
+  /* Segundo e terceiro fieldsets lado a lado */
+  fieldset:nth-child(2) {
+    grid-column: 1;
+  }
+  
+  fieldset:nth-child(3) {
+    grid-column: 2;
+  }
+  
+  /* Botões ocupam as duas colunas */
+  .buttons {
+    grid-column: 1 / -1;
+    margin-top: 15px;
+  }
+}
+
+/* Garantir que todos os fieldsets sejam sempre visíveis */
+fieldset {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Forçar visibilidade específica */
+fieldset:nth-child(1),
+fieldset:nth-child(2),
+fieldset:nth-child(3) {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
