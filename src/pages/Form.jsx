@@ -19,7 +19,7 @@ export default function Form() {
     organizer: "",
     requester: "",
     estimatedAttendees: "",
-    budget: "",
+    estimatedBudget: "", // <--- ALTERADO AQUI: budget para estimatedBudget
     notes: ""
   });
 
@@ -45,7 +45,7 @@ export default function Form() {
     await createEvent({
   ...formData,
   estimatedAttendees: Number(formData.estimatedAttendees),
-  estimatedBudget: Number(formData.budget),
+  estimatedBudget: Number(formData.estimatedBudget), // <--- ALTERADO AQUI: formData.budget para formData.estimatedBudget
   startDate: new Date(formData.startDate),
   endDate: formData.endDate ? new Date(formData.endDate) : null,
   status: "Aguardando",
@@ -130,7 +130,7 @@ export default function Form() {
             <input name="estimatedAttendees" value={formData.estimatedAttendees} onChange={handleChange} type="number" />
 
             <label>Orçamento Estimado (R$)</label>
-            <input name="budget" value={formData.budget} onChange={handleChange} type="number" />
+            <input name="estimatedBudget" value={formData.estimatedBudget} onChange={handleChange} type="number" /> {/* <--- ALTERADO AQUI: name="budget" para name="estimatedBudget" */}
 
             <label>Observações</label>
             <textarea name="notes" value={formData.notes} onChange={handleChange} />

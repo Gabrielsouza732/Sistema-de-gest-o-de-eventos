@@ -1,24 +1,12 @@
 import axios from "axios";
 
-// Base da URL do back-end
-const API_BASE_URL = "http://localhost:3001/api";
+const API_BASE_URL = "http://localhost:3001/api"; // Certifique-se que esta URL está correta
 
 // ========== EVENTOS ==========
 
-// Buscar todos os eventos (com filtros opcionais )
-
-export const fetchEvents = async (filters = {}) => {
+export const fetchEvents = async ( ) => {
   try {
-    const queryParams = new URLSearchParams();
-    Object.keys(filters).forEach(key => {
-      if (filters[key]) queryParams.append(key, filters[key]);
-    });
-    
-    const url = queryParams.toString() 
-      ? `${API_BASE_URL}/events?${queryParams.toString()}`
-      : `${API_BASE_URL}/events`;
-      
-    const response = await axios.get(url);
+    const response = await axios.get(`${API_BASE_URL}/events`);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar eventos:", error);
@@ -26,18 +14,6 @@ export const fetchEvents = async (filters = {}) => {
   }
 };
 
-// Buscar evento por ID
-export const fetchEventById = async (id) => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/events/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error("Erro ao buscar evento:", error);
-    throw error;
-  }
-};
-
-// Criar novo evento
 export const createEvent = async (eventData) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/events`, eventData);
@@ -48,7 +24,6 @@ export const createEvent = async (eventData) => {
   }
 };
 
-// Atualizar evento
 export const updateEvent = async (id, updatedData) => {
   try {
     const response = await axios.put(`${API_BASE_URL}/events/${id}`, updatedData);
@@ -59,10 +34,9 @@ export const updateEvent = async (id, updatedData) => {
   }
 };
 
-// Atualizar apenas o status do evento
 export const updateEventStatus = async (id, status) => {
   try {
-    const response = await axios.patch(`${API_BASE_URL}/events/${id}/status`, { status });
+    const response = await axios.put(`${API_BASE_URL}/events/${id}/status`, { status });
     return response.data;
   } catch (error) {
     console.error("Erro ao atualizar status do evento:", error);
@@ -70,7 +44,6 @@ export const updateEventStatus = async (id, status) => {
   }
 };
 
-// Deletar evento
 export const deleteEvent = async (id) => {
   try {
     const response = await axios.delete(`${API_BASE_URL}/events/${id}`);
@@ -83,7 +56,6 @@ export const deleteEvent = async (id) => {
 
 // ========== CHECKLIST ==========
 
-// Buscar itens do checklist por evento
 export const fetchChecklistItems = async (eventId) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/checklist/event/${eventId}`);
@@ -94,18 +66,6 @@ export const fetchChecklistItems = async (eventId) => {
   }
 };
 
-// Criar item do checklist
-export const createChecklistItem = async (checklistData) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/checklist`, checklistData);
-    return response.data;
-  } catch (error) {
-    console.error("Erro ao criar item do checklist:", error);
-    throw error;
-  }
-};
-
-// Atualizar item do checklist
 export const updateChecklistItem = async (id, updatedData) => {
   try {
     const response = await axios.put(`${API_BASE_URL}/checklist/${id}`, updatedData);
@@ -116,7 +76,16 @@ export const updateChecklistItem = async (id, updatedData) => {
   }
 };
 
-// Deletar item do checklist
+export const createChecklistItem = async (itemData) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/checklist`, itemData);
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao criar item do checklist:", error);
+    throw error;
+  }
+};
+
 export const deleteChecklistItem = async (id) => {
   try {
     const response = await axios.delete(`${API_BASE_URL}/checklist/${id}`);
@@ -129,7 +98,6 @@ export const deleteChecklistItem = async (id) => {
 
 // ========== COMENTÁRIOS ==========
 
-// Buscar comentários por evento
 export const fetchComments = async (eventId) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/comments/event/${eventId}`);
@@ -140,35 +108,34 @@ export const fetchComments = async (eventId) => {
   }
 };
 
-// Criar comentário
-export const createComment = async (commentData) => {
+export const addComment = async (commentData) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/comments`, commentData);
     return response.data;
   } catch (error) {
-    console.error("Erro ao criar comentário:", error);
+    console.error("Erro ao adicionar comentário:", error);
     throw error;
   }
 };
 
-// Atualizar comentário
-export const updateComment = async (id, updatedData) => {
+// ========== USUÁRIOS ==========
+
+export const fetchUsers = async () => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/comments/${id}`, updatedData);
+    const response = await axios.get(`${API_BASE_URL}/users`);
     return response.data;
   } catch (error) {
-    console.error("Erro ao atualizar comentário:", error);
+    console.error("Erro ao buscar usuários:", error);
     throw error;
   }
 };
 
-// Deletar comentário
-export const deleteComment = async (id) => {
+export const fetchUserById = async (userId) => {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/comments/${id}`);
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}`);
     return response.data;
   } catch (error) {
-    console.error("Erro ao deletar comentário:", error);
+    console.error(`Erro ao buscar usuário ${userId}:`, error);
     throw error;
   }
 };
