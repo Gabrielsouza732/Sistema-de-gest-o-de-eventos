@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import './KanbanCard.css';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { updateEvent, deleteEvent, fetchUsers } from '../services/api';
+import { updateEvent, deleteEvent, fetchUsers, fetchChecklistItems, updateChecklistItem, createChecklistItem, deleteChecklistItem, fetchComments, addComment } from '../services/api';
+
 import { useUser } from '../contexts/UserContext';
-import { CalendarDaysIcon,
+import { 
+  CalendarDaysIcon,
   UserIcon,
   MapPinIcon,
   TagIcon,
@@ -12,9 +14,15 @@ import { CalendarDaysIcon,
   UsersIcon,
   ClipboardDocumentListIcon,
   ChatBubbleLeftRightIcon,
-  TrashIcon, // Importar o ícone de lixeira
-  XMarkIcon, // Para o botão de fechar do modal
-  Cog6ToothIcon // Para o botão de configurações do membro
+  TrashIcon,
+  XMarkIcon,
+  ExclamationTriangleIcon,
+  ComputerDesktopIcon,
+  BuildingOfficeIcon,
+  ChevronDownIcon,
+  CheckCircleIcon,
+  PlusIcon,
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 
 export default function KanbanCard({ event, column, onDelete }) {
@@ -26,305 +34,140 @@ export default function KanbanCard({ event, column, onDelete }) {
     transition,
   };
 
-  const [clickTimeout, setClickTimeout] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-
-  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(event.title);
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [editedDescription, setEditedDescription] = useState(event.description || "");
-
-  // Estados para edição in-line de campos
-  const [editedRequester, setEditedRequester] = useState(event.requester || "");
-  const [isEditingRequester, setIsEditingRequester] = useState(false);
-  const [editedOrganizer, setEditedOrganizer] = useState(event.organizer || "");
-  const [isEditingOrganizer, setIsEditingOrganizer] = useState(false);
-  const [editedLocation, setEditedLocation] = useState(event.location || "");
-  const [isEditingLocation, setIsEditingLocation] = useState(false);
-  const [editedEventType, setEditedEventType] = useState(event.eventType || "");
-  const [isEditingEventType, setIsEditingEventType] = useState(false);
-  const [editedEventFormat, setEditedEventFormat] = useState(event.eventFormat || "");
-  const [isEditingEventFormat, setIsEditingEventFormat] = useState(false);
-  const [editedEstimatedBudget, setEditedEstimatedBudget] = useState(event.estimatedBudget || "");
-  const [isEditingEstimatedBudget, setIsEditingEstimatedBudget] = useState(false);
-  const [editedEstimatedAttendees, setEditedEstimatedAttendees] = useState(event.estimatedAttendees || "");
-  const [isEditingEstimatedAttendees, setIsEditingEstimatedAttendees] = useState(false);
-  const [editedCostCenter, setEditedCostCenter] = useState(event.costCenter || "");
-  const [isEditingCostCenter, setIsEditingCostCenter] = useState(false);
-
-  const [showChecklistDropdown, setShowChecklistDropdown] = useState(false);
-  const [showMemberDropdown, setShowMemberDropdown] = useState(false);
+  
+  // Estados para seções expansíveis
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [checklistExpanded, setChecklistExpanded] = useState(false);
   const [commentsExpanded, setCommentsExpanded] = useState(false);
-  const [newComment, setNewComment] = useState("");
 
-  // ✅ NOVO: Estado aprimorado para checklist com responsáveis
-  const [checklistItems, setChecklistItems] = useState([
-    { id: 'budget', text: 'Orçamento', completed: false, responsible: null },
-    { id: 'coffeebreak', text: 'Coffeebreak', completed: false, responsible: { name: 'João Santos', initials: 'JS' } },
-    { id: 'organization', text: 'Organização', completed: false, responsible: null }
-  ]);
+  // Estados para checklist
+  const [checklistItems, setChecklistItems] = useState([]);
+  const [loadingChecklist, setLoadingChecklist] = useState(false);
 
-  // ✅ NOVO: Lista de usuários carregada do backend
-  const [availableMembers, setAvailableMembers] = useState([]);
-  const [loadingMembers, setLoadingMembers] = useState(true);
+  // Estados para usuários/membros
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
-  const [comments, setComments] = useState({
-    [event.id]: [
-      { id: '1', author: 'Maria Silva', text: 'Precisamos confirmar o palestrante principal até amanhã.', timestamp: '25/06/2025 14:30' },
-      { id: '2', author: 'João Santos', text: 'Orçamento aprovado pela diretoria.', timestamp: '26/06/2025 09:15' }
-    ]
-  });
+  // Estados para comentários
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
 
-  // ✅ NOVO: Carregar usuários do backend
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatDateRange = (startDate, endDate) => {
+    const formattedStart = formatDate(startDate);
+    const formattedEnd = formatDate(endDate);
+    
+    if (formattedStart === "N/A" && formattedEnd === "N/A") {
+      return "N/A";
+    } else if (formattedStart === "N/A") {
+      return formattedEnd;
+    } else if (formattedEnd === "N/A") {
+      return formattedStart;
+    } else {
+      return `${formattedStart} - ${formattedEnd}`;
+    }
+  };
+
+  const formatBudget = (budget) => {
+    if (budget === undefined || budget === null || isNaN(Number(budget))) return "N/A";
+    return Number(budget).toLocaleString("pt-BR", {
+      style: 'currency',
+      currency: 'BRL'
+    });
+  };
+
+  const getPriorityColor = (priority) => {
+    switch(priority?.toLowerCase()) {
+      case 'alta': return '#e74c3c';
+      case 'média': return '#f39c12';
+      case 'baixa': return '#3498db';
+      default: return '#95a5a6';
+    }
+  };
+
+  // Carregar dados quando o modal abrir
   useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        setLoadingMembers(true);
-        const users = await fetchUsers();
-        
-        // Transformar usuários para o formato esperado
-        const formattedUsers = users.map(user => ({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          initials: user.name.charAt(0).toUpperCase()
-        }));
-        
-        setAvailableMembers(formattedUsers);
-        console.log(`✅ ${formattedUsers.length} usuários carregados do backend`);
-      } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
-        // Fallback para lista padrão em caso de erro
-        setAvailableMembers([
-          { id: 'fallback-1', name: 'João Santos', initials: 'JS' },
-          { id: 'fallback-2', name: 'Maria Silva', initials: 'MS' },
-          { id: 'fallback-3', name: 'Pedro Costa', initials: 'PC' },
-          { id: 'fallback-4', name: 'Ana Oliveira', initials: 'AO' }
-        ]);
-      } finally {
-        setLoadingMembers(false);
-      }
-    };
+    if (isModalOpen) {
+      loadChecklistItems();
+      loadUsers();
+      loadComments();
+    }
+  }, [isModalOpen]);
 
-    loadUsers();
-  }, []);
+  const loadChecklistItems = async () => {
+    setLoadingChecklist(true);
+    try {
+      const items = await fetchChecklistItems(event.id);
+      setChecklistItems(items);
+    } catch (error) {
+      console.error('Erro ao carregar checklist:', error);
+      setChecklistItems([]);
+    } finally {
+      setLoadingChecklist(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const users = await fetchUsers();
+      setAvailableUsers(users);
+      console.log('✅ 5 usuários carregados do backend');
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
+      setAvailableUsers([]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const loadComments = async () => {
+  setLoadingComments(true);
+  try {
+    const fetchedComments = await fetchComments(event.id); // <--- Usar a API real
+    setComments(fetchedComments);
+  } catch (error) {
+    console.error('Erro ao carregar comentários:', error);
+    setComments([]);
+  } finally {
+    setLoadingComments(false);
+  }
+};
 
   const handleOpenModal = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  
-  // Só abrir modal se não estiver arrastando
-  if (!isDragging) {
+    e.stopPropagation();
     setIsModalOpen(true);
-  }
-};
+  };
 
-  const handleMouseDown = (e) => {
-  setIsDragging(false);
-  
-  // Configurar timeout para detectar se é drag ou click
-  const timeout = setTimeout(() => {
-    setIsDragging(true);
-  }, 150); // 150ms para distinguir drag de click
-  
-  setClickTimeout(timeout);
-};
-
-const handleMouseUp = (e) => {
-  if (clickTimeout) {
-    clearTimeout(clickTimeout);
-    setClickTimeout(null);
-  }
-  
-  // Se não estava arrastando, é um clique
-  if (!isDragging) {
-    handleOpenModal(e);
-  }
-  
-  // Reset após um pequeno delay
-  setTimeout(() => {
-    setIsDragging(false);
-  }, 100);
-};
-
-
-  const handleCloseModal = () => {
+  const handleCloseModal = (e) => {
+    if (e) e.stopPropagation();
     setIsModalOpen(false);
-    setIsEditingTitle(false);
-    setIsEditingDescription(false);
-    setIsEditingRequester(false);
-    setIsEditingOrganizer(false);
-    setIsEditingLocation(false);
-    setIsEditingEventType(false);
-    setIsEditingEventFormat(false);
-    setIsEditingEstimatedBudget(false);
-    setIsEditingEstimatedAttendees(false);
-    setIsEditingCostCenter(false);
-    setShowChecklistDropdown(false);
-    setShowMemberDropdown(false);
   };
 
-  const handleUpdateEvent = async (field, value) => {
-    try {
-      const updatedEvent = await updateEvent(event.id, { [field]: value });
-      console.log(`✅ Evento ${field} atualizado:`, updatedEvent);
-      // Atualizar o estado local do evento no Kanban (se necessário, via prop ou context)
-    } catch (error) {
-      console.error(`Erro ao atualizar ${field} do evento:`, error);
-      // Reverter o estado local em caso de erro
-      if (field === 'title') setEditedTitle(event.title);
-      if (field === 'description') setEditedDescription(event.description);
-      if (field === 'requester') setEditedRequester(event.requester);
-      if (field === 'organizer') setEditedOrganizer(event.organizer);
-      if (field === 'location') setEditedLocation(event.location);
-      if (field === 'eventType') setEditedEventType(event.eventType);
-      if (field === 'eventFormat') setEditedEventFormat(event.eventFormat);
-      if (field === 'estimatedBudget') setEditedEstimatedBudget(event.estimatedBudget);
-      if (field === 'estimatedAttendees') setEditedEstimatedAttendees(event.estimatedAttendees);
-      if (field === 'costCenter') setEditedCostCenter(event.costCenter);
-      alert(`Erro ao atualizar ${field}.`);
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      setIsModalOpen(false);
     }
   };
 
-  const handleTitleChange = (e) => setEditedTitle(e.target.value);
-  const handleDescriptionChange = (e) => setEditedDescription(e.target.value);
-  const handleRequesterChange = (e) => setEditedRequester(e.target.value);
-  const handleOrganizerChange = (e) => setEditedOrganizer(e.target.value);
-  const handleLocationChange = (e) => setEditedLocation(e.target.value);
-  const handleEventTypeChange = (e) => setEditedEventType(e.target.value);
-  const handleEventFormatChange = (e) => setEditedEventFormat(e.target.value);
-  const handleEstimatedBudgetChange = (e) => setEditedEstimatedBudget(e.target.value);
-  const handleEstimatedAttendeesChange = (e) => setEditedEstimatedAttendees(e.target.value);
-  const handleCostCenterChange = (e) => setEditedCostCenter(e.target.value);
-
-  const handleSaveTitle = () => {
-    if (editedTitle.trim() !== event.title) {
-      handleUpdateEvent('title', editedTitle.trim());
-    }
-    setIsEditingTitle(false);
-  };
-
-  const handleSaveDescription = () => {
-    if (editedDescription.trim() !== event.description) {
-      handleUpdateEvent('description', editedDescription.trim());
-    }
-    setIsEditingDescription(false);
-  };
-
-  const handleSaveRequester = () => {
-    if (editedRequester.trim() !== event.requester) {
-      handleUpdateEvent('requester', editedRequester.trim());
-    }
-    setIsEditingRequester(false);
-  };
-
-  const handleSaveOrganizer = () => {
-    if (editedOrganizer.trim() !== event.organizer) {
-      handleUpdateEvent('organizer', editedOrganizer.trim());
-    }
-    setIsEditingOrganizer(false);
-  };
-
-  const handleSaveLocation = () => {
-    if (editedLocation.trim() !== event.location) {
-      handleUpdateEvent('location', editedLocation.trim());
-    }
-    setIsEditingLocation(false);
-  };
-
-  const handleSaveEventType = () => {
-    if (editedEventType.trim() !== event.eventType) {
-      handleUpdateEvent('eventType', editedEventType.trim());
-    }
-    setIsEditingEventType(false);
-  };
-
-  const handleSaveEventFormat = () => {
-    if (editedEventFormat.trim() !== event.eventFormat) {
-      handleUpdateEvent('eventFormat', editedEventFormat.trim());
-    }
-    setIsEditingEventFormat(false);
-  };
-
-  const handleSaveEstimatedBudget = () => {
-    const newValue = parseFloat(editedEstimatedBudget);
-    if (!isNaN(newValue) && newValue !== event.estimatedBudget) {
-      handleUpdateEvent('estimatedBudget', newValue);
-    }
-    setIsEditingEstimatedBudget(false);
-  };
-
-  const handleSaveEstimatedAttendees = () => {
-    const newValue = parseInt(editedEstimatedAttendees);
-    if (!isNaN(newValue) && newValue !== event.estimatedAttendees) {
-      handleUpdateEvent('estimatedAttendees', newValue);
-    }
-    setIsEditingEstimatedAttendees(false);
-  };
-
-  const handleSaveCostCenter = () => {
-    if (editedCostCenter.trim() !== event.costCenter) {
-      handleUpdateEvent('costCenter', editedCostCenter.trim());
-    }
-    setIsEditingCostCenter(false);
-  };
-
-  const handleKeyDown = (e, saveFunction, cancelFunction) => {
-    if (e.key === 'Enter') {
-      saveFunction();
-    } else if (e.key === 'Escape') {
-      cancelFunction();
-    }
-  };
-
-  const toggleChecklistItem = (id) => {
-    setChecklistItems(prevItems =>
-      prevItems.map(item =>
-        item.id === id ? { ...item, completed: !item.completed } : item
-      )
-    );
-  };
-
-  const addEventMember = (member) => {
-    console.log(`Adicionando membro: ${member.name}`);
-    // Lógica para adicionar o membro ao evento (ainda não integrada com o backend)
-    // Por enquanto, apenas um log para demonstração
-    // Em uma implementação real, você faria uma chamada de API aqui
-  };
-
-  const assignedMembers = checklistItems
-    .filter(item => item.responsible)
-    .map(item => item.responsible);
-
-  const handleAddComment = () => {
-    if (newComment.trim() && currentUser) {
-      const newCommentObj = {
-        id: Date.now().toString(), // ID temporário
-        author: currentUser.name,
-        authorId: currentUser.id,
-        text: newComment.trim(),
-        timestamp: new Date().toLocaleString('pt-BR'),
-        createdAt: new Date().toISOString()
-      };
-      setComments(prevComments => ({
-        ...prevComments,
-        [event.id]: [...(prevComments[event.id] || []), newCommentObj]
-      }));
-      setNewComment('');
-      console.log('💬 Comentário adicionado:', { evento: event.title, autor: currentUser.name, comentario: newComment.trim() });
-    }
-  };
-
-  // ✅ NOVO: Função para lidar com a exclusão do evento
   const handleDeleteEvent = async () => {
     if (window.confirm(`Tem certeza que deseja excluir o evento "${event.title}"? Esta ação é irreversível.`)) {
       try {
         await deleteEvent(event.id);
-        onDelete(event.id); // Notifica o componente pai para remover o card
-        handleCloseModal(); // Fecha o modal após a exclusão
+        if (onDelete) onDelete(event.id);
+        handleCloseModal();
         console.log(`✅ Evento "${event.title}" (${event.id}) excluído com sucesso.`);
       } catch (error) {
         console.error('Erro ao excluir evento:', error);
@@ -333,437 +176,468 @@ const handleMouseUp = (e) => {
     }
   };
 
+  const handleTitleChange = (e) => {
+    setEditedTitle(e.target.value);
+  };
+
+  const handleSaveTitle = async () => {
+    try {
+      await updateEvent(event.id, { title: editedTitle });
+      setIsEditingTitle(false);
+      console.log(`✅ Título do evento atualizado para: ${editedTitle}`);
+    } catch (error) {
+      console.error('Erro ao atualizar título:', error);
+      setEditedTitle(event.title); // Reverter em caso de erro
+    }
+  };
+
+  const handleKeyDown = (e, saveFunction, cancelFunction) => {
+    if (e.key === 'Enter') {
+      saveFunction();
+    } else if (e.key === 'Escape') {
+      cancelFunction();
+      setIsEditingTitle(false);
+    }
+  };
+
+  // Funções do Checklist
+  const toggleChecklistItem = async (itemId) => {
+    try {
+      const item = checklistItems.find(i => i.id === itemId);
+      const updatedItem = await updateChecklistItem(itemId, { 
+        completed: !item.completed 
+      });
+      
+      setChecklistItems(prev => 
+        prev.map(i => i.id === itemId ? updatedItem : i)
+      );
+      
+      console.log(`✅ Item do checklist ${updatedItem.completed ? 'marcado' : 'desmarcado'}: ${item.text}`);
+    } catch (error) {
+      console.error('Erro ao atualizar item do checklist:', error);
+    }
+  };
+
+  const addChecklistItem = async () => {
+    const newItemText = prompt('Digite o nome do novo item:');
+    if (newItemText && newItemText.trim()) {
+      try {
+        const newItem = await createChecklistItem({
+          eventId: event.id,
+          text: newItemText.trim(),
+          completed: false,
+          responsibleId: null
+        });
+        
+        setChecklistItems(prev => [...prev, newItem]);
+        console.log(`✅ Novo item adicionado ao checklist: ${newItemText}`);
+      } catch (error) {
+        console.error('Erro ao adicionar item ao checklist:', error);
+        alert('Erro ao adicionar item. Tente novamente.');
+      }
+    }
+  };
+
+  const removeChecklistItem = async (itemId) => {
+    if (window.confirm('Tem certeza que deseja remover este item?')) {
+      try {
+        await deleteChecklistItem(itemId);
+        setChecklistItems(prev => prev.filter(i => i.id !== itemId));
+        console.log(`✅ Item removido do checklist`);
+      } catch (error) {
+        console.error('Erro ao remover item do checklist:', error);
+        alert('Erro ao remover item. Tente novamente.');
+      }
+    }
+  };
+
+  const assignResponsible = async (itemId, userId) => {
+    try {
+      const updatedItem = await updateChecklistItem(itemId, { 
+        responsibleId: userId 
+      });
+      
+      setChecklistItems(prev => 
+        prev.map(i => i.id === itemId ? updatedItem : i)
+      );
+      
+      const user = availableUsers.find(u => u.id === userId);
+      console.log(`✅ Responsável atribuído: ${user?.name} para item do checklist`);
+    } catch (error) {
+      console.error('Erro ao atribuir responsável:', error);
+    }
+  };
+
+  // Funções dos Comentários
+  const handleAddComment = async () => { // <--- Adicionar async
+  if (newComment.trim()) {
+    try {
+      const createdComment = await addComment({ // <--- Usar a API real
+        eventId: event.id,
+        text: newComment.trim(),
+        authorId: currentUser?.id || '1', // Usar o ID do usuário logado
+      });
+      
+      setComments(prev => [...prev, createdComment]);
+      setNewComment('');
+      console.log(`✅ Comentário adicionado: ${newComment.trim()}`);
+    } catch (error) {
+      console.error('Erro ao adicionar comentário:', error);
+      alert('Erro ao adicionar comentário. Tente novamente.');
+    }
+  }
+};
+
+
   return (
-  <div
-    ref={setNodeRef}
-    style={style}
-    {...attributes}
-    {...listeners}
-    className={`kanban-card ${column}`}
-    onMouseDown={handleMouseDown}
-    onMouseUp={handleMouseUp}
-    title="Clique para expandir ou arraste para mover"
-  >
-    <h3>{event.title}</h3>
-    <p>Status: {event.status}</p>
-    {event.priority && <p>Prioridade: {event.priority}</p>}
+    <>
+      {/* Card compacto */}
+      <div 
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        className={`kanban-card ${column.toLowerCase().replace(" ", "-")}`}
+      >
+        {/* Header do Card */}
+        <div className="card-header">
+          <h4 className="card-title">{event.title}</h4>
+          <button 
+            className="card-expand-button"
+            onClick={handleOpenModal}
+            title="Expandir card"
+          >
+            ⤢
+          </button>
+        </div>
 
-    {isModalOpen && (
-      <div className="modal-backdrop" onClick={handleCloseModal}>
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-          {/* Resto do modal continua igual... */}
-
-          {/* Header do Modal */}
-          <div className="modal-header">
-            {isEditingTitle ? (
-              <input
-                type="text"
-                value={editedTitle}
-                onChange={handleTitleChange}
-                onBlur={handleSaveTitle}
-                onKeyDown={(e) => handleKeyDown(e, handleSaveTitle, () => setEditedTitle(event.title))}
-                className="modal-title-input"
-                autoFocus
-              />
-            ) : (
-              <h2 
-                className="modal-title"
-                onDoubleClick={() => setIsEditingTitle(true)}
-                title="Duplo clique para editar"
-              >
-                {editedTitle || "Sem Título"}
-              </h2>
-            )}
-            <div className="modal-actions">
-              <button 
-                className="modal-delete-button" 
-                onClick={handleDeleteEvent} 
-                title="Excluir Evento"
-              >
-                <TrashIcon style={{ width: '20px', height: '20px' }} />
-              </button>
-              <button 
-                className="modal-close-button" 
-                onClick={handleCloseModal} 
-                title="Fechar"
-              >
-                <XMarkIcon style={{ width: '20px', height: '20px' }} />
-              </button>
-            </div>
+        {/* Informações principais */}
+        <div className="card-info">
+          <div className="info-item">
+            <CalendarDaysIcon style={{ width: '16px', height: '16px', marginRight: '4px' }} />
+            <span className="info-label">Data:</span>
+            <span className="info-value">{formatDateRange(event.startDate, event.endDate)}</span>
           </div>
-          
-          {/* Continue com o resto do modal aqui... */}
 
+          <div className="info-item">
+            <UserIcon style={{ width: '16px', height: '16px', marginRight: '4px' }} />
+            <span className="info-label">Responsável:</span>
+            <span className="info-value">{event.requester || 'N/A'}</span>
+          </div>
+
+          <div className="info-item">
+            <ExclamationTriangleIcon style={{ width: '16px', height: '16px', marginRight: '4px' }} />
+            <span className="info-label">Status:</span>
+            <span className="info-value">{event.status || 'N/A'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal renderizado FORA do card */}
+      {isModalOpen && (
+        <div className="modal-backdrop" onClick={handleBackdropClick}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            {/* Header do Modal */}
+            <div className="modal-header">
+              {isEditingTitle ? (
+                <input
+                  type="text"
+                  value={editedTitle}
+                  onChange={handleTitleChange}
+                  onBlur={handleSaveTitle}
+                  onKeyDown={(e) => handleKeyDown(e, handleSaveTitle, () => setEditedTitle(event.title))}
+                  className="modal-title-input"
+                  autoFocus
+                />
+              ) : (
+                <h2 
+                  className="modal-title"
+                  onDoubleClick={() => setIsEditingTitle(true)}
+                  title="Duplo clique para editar"
+                >
+                  {editedTitle || "Sem Título"}
+                </h2>
+              )}
+              <div className="modal-actions">
+                <button 
+                  className="modal-delete-button" 
+                  onClick={handleDeleteEvent} 
+                  title="Excluir Evento"
+                >
+                  <TrashIcon style={{ width: '20px', height: '20px' }} />
+                </button>
+                <button 
+                  className="modal-close-button" 
+                  onClick={handleCloseModal} 
+                  title="Fechar"
+                >
+                  <XMarkIcon style={{ width: '20px', height: '20px' }} />
+                </button>
+              </div>
+            </div>
 
             {/* Corpo do Modal */}
             <div className="modal-body">
-              {/* Descrição */}
-              <div className="modal-section">
-                <h3 className="modal-section-title">Descrição</h3>
-                {isEditingDescription ? (
-                  <textarea
-                    value={editedDescription}
-                    onChange={handleDescriptionChange}
-                    onBlur={handleSaveDescription}
-                    onKeyDown={(e) => handleKeyDown(e, handleSaveDescription, () => setEditedDescription(event.description))}
-                    className="modal-description-textarea"
-                    autoFocus
-                    rows="4"
-                  />
-                ) : (
-                  <p 
-                    className="modal-description"
-                    onDoubleClick={() => setIsEditingDescription(true)}
-                    title="Duplo clique para editar"
-                  >
-                    {editedDescription || "Nenhuma descrição fornecida."}
-                  </p>
-                )}
-              </div>
+              {/* Informações principais em grid */}
+              <div className="modal-info-grid">
+                <div className="modal-info-item">
+                  <span className="modal-info-label">
+                    <CalendarDaysIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                    Data:
+                  </span>
+                  <span className="modal-info-value">{formatDateRange(event.startDate, event.endDate)}</span>
+                </div>
+                
+                <div className="modal-info-item">
+                  <span className="modal-info-label">
+                    <UserIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                    Responsável:
+                  </span>
+                  <span className="modal-info-value">{event.requester || 'N/A'}</span>
+                </div>
 
-              {/* Detalhes do Evento */}
-              <div className="modal-section">
-                <h3 className="modal-section-title">Detalhes do Evento</h3>
-                <div className="modal-details-grid">
-                  <div className="modal-detail-item">
-                    <UserIcon className="modal-detail-icon" />
-                    <span className="modal-detail-label">Responsável:</span>
-                    {isEditingRequester ? (
-                      <input
-                        type="text"
-                        value={editedRequester}
-                        onChange={handleRequesterChange}
-                        onBlur={handleSaveRequester}
-                        onKeyDown={(e) => handleKeyDown(e, handleSaveRequester, () => setEditedRequester(event.requester))}
-                        className="modal-detail-input"
-                        autoFocus
-                      />
-                    ) : (
-                      <span 
-                        className="modal-detail-value"
-                        onDoubleClick={() => setIsEditingRequester(true)}
-                        title="Duplo clique para editar"
-                      >
-                        {editedRequester || "Não definido"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="modal-detail-item">
-                    <UserIcon className="modal-detail-icon" />
-                    <span className="modal-detail-label">Organizador:</span>
-                    {isEditingOrganizer ? (
-                      <input
-                        type="text"
-                        value={editedOrganizer}
-                        onChange={handleOrganizerChange}
-                        onBlur={handleSaveOrganizer}
-                        onKeyDown={(e) => handleKeyDown(e, handleSaveOrganizer, () => setEditedOrganizer(event.organizer))}
-                        className="modal-detail-input"
-                        autoFocus
-                      />
-                    ) : (
-                      <span 
-                        className="modal-detail-value"
-                        onDoubleClick={() => setIsEditingOrganizer(true)}
-                        title="Duplo clique para editar"
-                      >
-                        {editedOrganizer || "Não definido"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="modal-detail-item">
-                    <MapPinIcon className="modal-detail-icon" />
-                    <span className="modal-detail-label">Local:</span>
-                    {isEditingLocation ? (
-                      <input
-                        type="text"
-                        value={editedLocation}
-                        onChange={handleLocationChange}
-                        onBlur={handleSaveLocation}
-                        onKeyDown={(e) => handleKeyDown(e, handleSaveLocation, () => setEditedLocation(event.location))}
-                        className="modal-detail-input"
-                        autoFocus
-                      />
-                    ) : (
-                      <span 
-                        className="modal-detail-value"
-                        onDoubleClick={() => setIsEditingLocation(true)}
-                        title="Duplo clique para editar"
-                      >
-                        {editedLocation || "Não definido"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="modal-detail-item">
-                    <TagIcon className="modal-detail-icon" />
-                    <span className="modal-detail-label">Tipo:</span>
-                    {isEditingEventType ? (
-                      <input
-                        type="text"
-                        value={editedEventType}
-                        onChange={handleEventTypeChange}
-                        onBlur={handleSaveEventType}
-                        onKeyDown={(e) => handleKeyDown(e, handleSaveEventType, () => setEditedEventType(event.eventType))}
-                        className="modal-detail-input"
-                        autoFocus
-                      />
-                    ) : (
-                      <span 
-                        className="modal-detail-value"
-                        onDoubleClick={() => setIsEditingEventType(true)}
-                        title="Duplo clique para editar"
-                      >
-                        {editedEventType || "Não definido"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="modal-detail-item">
-                    <TagIcon className="modal-detail-icon" />
-                    <span className="modal-detail-label">Formato:</span>
-                    {isEditingEventFormat ? (
-                      <input
-                        type="text"
-                        value={editedEventFormat}
-                        onChange={handleEventFormatChange}
-                        onBlur={handleSaveEventFormat}
-                        onKeyDown={(e) => handleKeyDown(e, handleSaveEventFormat, () => setEditedEventFormat(event.eventFormat))}
-                        className="modal-detail-input"
-                        autoFocus
-                      />
-                    ) : (
-                      <span 
-                        className="modal-detail-value"
-                        onDoubleClick={() => setIsEditingEventFormat(true)}
-                        title="Duplo clique para editar"
-                      >
-                        {editedEventFormat || "Não definido"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="modal-detail-item">
-                    <CurrencyDollarIcon className="modal-detail-icon" />
-                    <span className="modal-detail-label">Orçamento:</span>
-                    {isEditingEstimatedBudget ? (
-                      <input
-                        type="number"
-                        value={editedEstimatedBudget}
-                        onChange={handleEstimatedBudgetChange}
-                        onBlur={handleSaveEstimatedBudget}
-                        onKeyDown={(e) => handleKeyDown(e, handleSaveEstimatedBudget, () => setEditedEstimatedBudget(event.estimatedBudget))}
-                        className="modal-detail-input"
-                        autoFocus
-                      />
-                    ) : (
-                      <span 
-                        className="modal-detail-value"
-                        onDoubleClick={() => setIsEditingEstimatedBudget(true)}
-                        title="Duplo clique para editar"
-                      >
-                        {editedEstimatedBudget ? `R$ ${parseFloat(editedEstimatedBudget).toFixed(2)}` : "Não definido"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="modal-detail-item">
-                    <UsersIcon className="modal-detail-icon" />
-                    <span className="modal-detail-label">Participantes:</span>
-                    {isEditingEstimatedAttendees ? (
-                      <input
-                        type="number"
-                        value={editedEstimatedAttendees}
-                        onChange={handleEstimatedAttendeesChange}
-                        onBlur={handleSaveEstimatedAttendees}
-                        onKeyDown={(e) => handleKeyDown(e, handleSaveEstimatedAttendees, () => setEditedEstimatedAttendees(event.estimatedAttendees))}
-                        className="modal-detail-input"
-                        autoFocus
-                      />
-                    ) : (
-                      <span 
-                        className="modal-detail-value"
-                        onDoubleClick={() => setIsEditingEstimatedAttendees(true)}
-                        title="Duplo clique para editar"
-                      >
-                        {editedEstimatedAttendees || "Não definido"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="modal-detail-item">
-                    <CurrencyDollarIcon className="modal-detail-icon" />
-                    <span className="modal-detail-label">Centro de Custo:</span>
-                    {isEditingCostCenter ? (
-                      <input
-                        type="text"
-                        value={editedCostCenter}
-                        onChange={handleCostCenterChange}
-                        onBlur={handleSaveCostCenter}
-                        onKeyDown={(e) => handleKeyDown(e, handleSaveCostCenter, () => setEditedCostCenter(event.costCenter))}
-                        className="modal-detail-input"
-                        autoFocus
-                      />
-                    ) : (
-                      <span 
-                        className="modal-detail-value"
-                        onDoubleClick={() => setIsEditingCostCenter(true)}
-                        title="Duplo clique para editar"
-                      >
-                        {editedCostCenter || "Não definido"}
-                      </span>
-                    )}
-                  </div>
+                <div className="modal-info-item">
+                  <span className="modal-info-label">
+                    <UserIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                    Organizador:
+                  </span>
+                  <span className="modal-info-value">{event.organizer || 'N/A'}</span>
+                </div>
+
+                <div className="modal-info-item">
+                  <span className="modal-info-label">
+                    <MapPinIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                    Local:
+                  </span>
+                  <span className="modal-info-value">{event.location || 'N/A'}</span>
+                </div>
+
+                <div className="modal-info-item">
+                  <span className="modal-info-label">
+                    <TagIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                    Tipo:
+                  </span>
+                  <span className="modal-info-value">{event.eventType || 'N/A'}</span>
+                </div>
+
+                <div className="modal-info-item">
+                  <span className="modal-info-label">
+                    <ComputerDesktopIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                    Formato:
+                  </span>
+                  <span className="modal-info-value">{event.eventFormat || 'N/A'}</span>
+                </div>
+
+                <div className="modal-info-item">
+                  <span className="modal-info-label">
+                    <ExclamationTriangleIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                    Prioridade:
+                  </span>
+                  <span 
+                    className="modal-priority-badge"
+                    style={{ color: getPriorityColor(event.priority || 'Alta') }}
+                  >
+                    {event.priority || 'Alta'}
+                  </span>
+                </div>
+
+                <div className="modal-info-item">
+                  <span className="modal-info-label">
+                    <CurrencyDollarIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                    Orçamento:
+                  </span>
+                  <span className="modal-info-value">{formatBudget(event.estimatedBudget)}</span>
+                </div>
+
+                <div className="modal-info-item">
+                  <span className="modal-info-label">
+                    <UsersIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                    Participantes:
+                  </span>
+                  <span className="modal-info-value">{event.estimatedAttendees || 'N/A'}</span>
+                </div>
+
+                <div className="modal-info-item">
+                  <span className="modal-info-label">
+                    <BuildingOfficeIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                    Centro de Custo:
+                  </span>
+                  <span className="modal-info-value">{event.costCenter || 'N/A'}</span>
                 </div>
               </div>
 
-              {/* Membros */}
-              <div className="modal-section">
-                <h3 className="modal-section-title">Membros</h3>
-                <div className="modal-members-list">
-                  {assignedMembers.map((member, index) => (
-                    <div key={index} className="modal-member-tag">
-                      <div className="modal-member-avatar">{member.initials}</div>
-                      <span>{member.name}</span>
-                    </div>
-                  ))}
-                  <button 
-                    className="modal-add-member-button"
-                    onClick={() => setShowMemberDropdown(!showMemberDropdown)}
-                  >
-                    + Adicionar Membro
-                  </button>
-                  
-                  {showMemberDropdown && (
-                    <div className="modal-member-dropdown">
-                      {loadingMembers ? (
-                        <div className="modal-member-loading">
-                          Carregando usuários...
-                        </div>
-                      ) : (
-                        <>
-                          {availableMembers
-                            .filter(member => !assignedMembers.find(assigned => assigned.id === member.id))
-                            .map(member => (
-                              <div 
-                                key={member.id} 
-                                className="modal-member-option"
-                                onClick={() => {
-                                  addEventMember(member);
-                                  setShowMemberDropdown(false);
-                                }}
-                              >
-                                <div className="modal-member-avatar">
-                                  {member.initials}
-                                </div>
-                                <div className="modal-member-info">
-                                  <span className="modal-member-name">{member.name}</span>
-                                  {member.email && (
-                                    <span className="modal-member-email">{member.email}</span>
-                                  )}
-                                </div>
-                              </div>
-                            ))
-                          }
-                          {!loadingMembers && availableMembers.filter(member => !assignedMembers.find(assigned => assigned.id === member.id)).length === 0 && (
-                            <div className="modal-no-members">
-                              Todos os usuários já foram adicionados
-                            </div>
-                          )}
-                        </>
-                      )}
+              {/* Seção de Descrição Expansível */}
+              <button 
+                className="modal-dropdown-header"
+                onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+              >
+                <span className="modal-dropdown-title">Descrição Completa</span>
+                <ChevronDownIcon
+                  style={{ width: '16px', height: '16px' }}
+                  className={`transition-transform duration-200 ${descriptionExpanded ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {descriptionExpanded && (
+                <div className="modal-dropdown-content">
+                  <p>{event.description || "Nenhuma descrição fornecida."}</p>
+                  {event.notes && (
+                    <div>
+                      <strong>Observações:</strong>
+                      <p>{event.notes}</p>
                     </div>
                   )}
                 </div>
-              </div>
+              )}
 
-              {/* Checklist */}
-              <div className="modal-section">
-                <h3 className="modal-section-title">
-                  Checklist
-                  <button 
-                    className="modal-expand-button"
-                    onClick={() => setChecklistExpanded(!checklistExpanded)}
-                  >
-                    {checklistExpanded ? 'Esconder' : 'Expandir'}
-                  </button>
-                </h3>
-                {checklistExpanded && (
-                  <div className="modal-checklist-items">
-                    {checklistItems.map(item => (
-                      <div key={item.id} className="modal-checklist-item">
-                        <input
-                          type="checkbox"
-                          checked={item.completed}
-                          onChange={() => toggleChecklistItem(item.id)}
-                        />
-                        <span>{item.text}</span>
-                        {item.responsible && (
-                          <span className="modal-checklist-responsible">
-                            ({item.responsible.name})
-                          </span>
-                        )}
+              {/* Seção de Checklist Expansível */}
+              <button 
+                className="modal-dropdown-header"
+                onClick={() => setChecklistExpanded(!checklistExpanded)}
+              >
+                <span className="modal-dropdown-title">
+                  <ClipboardDocumentListIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                  Checklist ({checklistItems.length} itens)
+                </span>
+                <ChevronDownIcon
+                  style={{ width: '16px', height: '16px' }}
+                  className={`transition-transform duration-200 ${checklistExpanded ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {checklistExpanded && (
+                <div className="modal-dropdown-content">
+                  {loadingChecklist ? (
+                    <p>Carregando checklist...</p>
+                  ) : (
+                    <>
+                      <div className="checklist-header">
+                        <button 
+                          className="add-checklist-item-button"
+                          onClick={addChecklistItem}
+                        >
+                          <PlusIcon style={{ width: '16px', height: '16px', marginRight: '4px' }} />
+                          Adicionar Item
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Comentários */}
-              <div className="modal-section">
-                <h3 className="modal-section-title">
-                  Comentários
-                  <button 
-                    className="modal-expand-button"
-                    onClick={() => setCommentsExpanded(!commentsExpanded)}
-                  >
-                    {commentsExpanded ? 'Esconder' : 'Expandir'}
-                  </button>
-                </h3>
-                {commentsExpanded && (
-                  <div className="modal-dropdown-content">
-                    {/* Área de adicionar comentário */}
-                    <div className="add-comment-section">
-                      <div className="comment-input-container">
-                        <div className="comment-avatar">
-                          {currentUser ? currentUser.initials : 'U'}
+                      
+                      {checklistItems.length === 0 ? (
+                        <p>Nenhum item no checklist. Clique em "Adicionar Item" para começar.</p>
+                      ) : (
+                        <div className="checklist-items">
+                          {checklistItems.map((item) => (
+                            <div key={item.id} className="checklist-item">
+                              <div className="checklist-item-main">
+                                <button
+                                  className={`checklist-checkbox ${item.completed ? 'completed' : ''}`}
+                                  onClick={() => toggleChecklistItem(item.id)}
+                                >
+                                  {item.completed && <CheckCircleIcon style={{ width: '16px', height: '16px' }} />}
+                                </button>
+                                
+                                <span className={`checklist-text ${item.completed ? 'completed' : ''}`}>
+                                  {item.text}
+                                </span>
+                                
+                                <div className="checklist-actions">
+                                  {item.responsibleId && (
+                                    <span className="responsible-badge">
+                                      <UserIcon style={{ width: '14px', height: '14px', marginRight: '2px' }} />
+                                      {availableUsers.find(u => u.id === item.responsibleId)?.name || 'Usuário'}
+                                    </span>
+                                  )}
+                                  
+                                  <select
+                                    value={item.responsibleId || ''}
+                                    onChange={(e) => assignResponsible(item.id, e.target.value || null)}
+                                    className="responsible-select"
+                                  >
+                                    <option value="">Sem responsável</option>
+                                    {availableUsers.map(user => (
+                                      <option key={user.id} value={user.id}>
+                                        {user.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  
+                                  <button
+                                    className="remove-item-button"
+                                    onClick={() => removeChecklistItem(item.id)}
+                                    title="Remover item"
+                                  >
+                                    <TrashIcon style={{ width: '14px', height: '14px' }} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <textarea
-                          className="comment-input"
-                          placeholder="Escreva um comentário..."
-                          value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                          rows="3"
-                        />
-                      </div>
-                      <button 
-                        className="add-comment-button"
-                        onClick={handleAddComment}
-                        disabled={!newComment.trim() || !currentUser}
-                      >
-                        Comentar
-                      </button>
-                    </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
 
-                    {/* Lista de comentários */}
-                    <div className="comments-list">
-                      {comments[event.id] && comments[event.id].length > 0 ? (
-                        comments[event.id].map((comment, index) => (
-                          <div key={index} className="comment-item">
-                            <div className="comment-avatar">{comment.author.charAt(0).toUpperCase()}</div>
-                            <div className="comment-content">
-                              <span className="comment-author">{comment.author}</span>
-                              <span className="comment-timestamp">{comment.timestamp}</span>
+              {/* Seção de Comentários Expansível */}
+              <button 
+                className="modal-dropdown-header"
+                onClick={() => setCommentsExpanded(!commentsExpanded)}
+              >
+                <span className="modal-dropdown-title">
+                  <ChatBubbleLeftRightIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
+                  Comentários ({comments.length})
+                </span>
+                <ChevronDownIcon
+                  style={{ width: '16px', height: '16px' }}
+                  className={`transition-transform duration-200 ${commentsExpanded ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {commentsExpanded && (
+                <div className="modal-dropdown-content">
+                  {loadingComments ? (
+                    <p>Carregando comentários...</p>
+                  ) : (
+                    <>
+                      <div className="comments-list">
+                        {comments.length === 0 ? (
+                          <p>Nenhum comentário ainda. Seja o primeiro a comentar!</p>
+                        ) : (
+                          comments.map((comment) => (
+                            <div key={comment.id} className="comment-item">
+                              <div className="comment-header">
+                                <strong>{comment.author}</strong>
+                                <span className="comment-date">
+                                  {formatDate(comment.createdAt)}
+                                </span>
+                              </div>
                               <p className="comment-text">{comment.text}</p>
                             </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="no-comments">Nenhum comentário ainda.</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+                          ))
+                        )}
+                      </div>
+                      
+                      <div className="add-comment">
+                        <textarea
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          placeholder="Adicione um comentário..."
+                          className="comment-input"
+                          rows={3}
+                        />
+                        <button
+                          onClick={handleAddComment}
+                          className="add-comment-button"
+                          disabled={!newComment.trim()}
+                        >
+                          Adicionar Comentário
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
