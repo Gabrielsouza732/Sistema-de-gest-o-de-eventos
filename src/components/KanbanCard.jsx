@@ -26,6 +26,10 @@ export default function KanbanCard({ event, column, onDelete }) {
     transition,
   };
 
+  const [clickTimeout, setClickTimeout] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(event.title);
@@ -109,9 +113,43 @@ export default function KanbanCard({ event, column, onDelete }) {
   }, []);
 
   const handleOpenModal = (e) => {
-    e.stopPropagation();
+  e.preventDefault();
+  e.stopPropagation();
+  
+  // Só abrir modal se não estiver arrastando
+  if (!isDragging) {
     setIsModalOpen(true);
-  };
+  }
+};
+
+  const handleMouseDown = (e) => {
+  setIsDragging(false);
+  
+  // Configurar timeout para detectar se é drag ou click
+  const timeout = setTimeout(() => {
+    setIsDragging(true);
+  }, 150); // 150ms para distinguir drag de click
+  
+  setClickTimeout(timeout);
+};
+
+const handleMouseUp = (e) => {
+  if (clickTimeout) {
+    clearTimeout(clickTimeout);
+    setClickTimeout(null);
+  }
+  
+  // Se não estava arrastando, é um clique
+  if (!isDragging) {
+    handleOpenModal(e);
+  }
+  
+  // Reset após um pequeno delay
+  setTimeout(() => {
+    setIsDragging(false);
+  }, 100);
+};
+
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -296,60 +334,66 @@ export default function KanbanCard({ event, column, onDelete }) {
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={`kanban-card ${column}`}
-      onClick={handleOpenModal}
-      title="Clique para expandir"
-    >
-      <h3>{event.title}</h3>
-      <p>Status: {event.status}</p>
-      {event.priority && <p>Prioridade: {event.priority}</p>}
+  <div
+    ref={setNodeRef}
+    style={style}
+    {...attributes}
+    {...listeners}
+    className={`kanban-card ${column}`}
+    onMouseDown={handleMouseDown}
+    onMouseUp={handleMouseUp}
+    title="Clique para expandir ou arraste para mover"
+  >
+    <h3>{event.title}</h3>
+    <p>Status: {event.status}</p>
+    {event.priority && <p>Prioridade: {event.priority}</p>}
 
-      {isModalOpen && (
-        <div className="modal-backdrop" onClick={handleCloseModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            {/* Header do Modal */}
-            <div className="modal-header">
-              {isEditingTitle ? (
-                <input
-                  type="text"
-                  value={editedTitle}
-                  onChange={handleTitleChange}
-                  onBlur={handleSaveTitle}
-                  onKeyDown={(e) => handleKeyDown(e, handleSaveTitle, () => setEditedTitle(event.title))}
-                  className="modal-title-input"
-                  autoFocus
-                />
-              ) : (
-                <h2 
-                  className="modal-title"
-                  onDoubleClick={() => setIsEditingTitle(true)}
-                  title="Duplo clique para editar"
-                >
-                  {editedTitle || "Sem Título"}
-                </h2>
-              )}
-              <div className="modal-actions">
-                <button 
-                  className="modal-delete-button" 
-                  onClick={handleDeleteEvent} 
-                  title="Excluir Evento"
-                >
-                  <TrashIcon style={{ width: '20px', height: '20px' }} />
-                </button>
-                <button 
-                  className="modal-close-button" 
-                  onClick={handleCloseModal} 
-                  title="Fechar"
-                >
-                  <XMarkIcon style={{ width: '20px', height: '20px' }} />
-                </button>
-              </div>
+    {isModalOpen && (
+      <div className="modal-backdrop" onClick={handleCloseModal}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          {/* Resto do modal continua igual... */}
+
+          {/* Header do Modal */}
+          <div className="modal-header">
+            {isEditingTitle ? (
+              <input
+                type="text"
+                value={editedTitle}
+                onChange={handleTitleChange}
+                onBlur={handleSaveTitle}
+                onKeyDown={(e) => handleKeyDown(e, handleSaveTitle, () => setEditedTitle(event.title))}
+                className="modal-title-input"
+                autoFocus
+              />
+            ) : (
+              <h2 
+                className="modal-title"
+                onDoubleClick={() => setIsEditingTitle(true)}
+                title="Duplo clique para editar"
+              >
+                {editedTitle || "Sem Título"}
+              </h2>
+            )}
+            <div className="modal-actions">
+              <button 
+                className="modal-delete-button" 
+                onClick={handleDeleteEvent} 
+                title="Excluir Evento"
+              >
+                <TrashIcon style={{ width: '20px', height: '20px' }} />
+              </button>
+              <button 
+                className="modal-close-button" 
+                onClick={handleCloseModal} 
+                title="Fechar"
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+              </button>
             </div>
+          </div>
+          
+          {/* Continue com o resto do modal aqui... */}
+
 
             {/* Corpo do Modal */}
             <div className="modal-body">

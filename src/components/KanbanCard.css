@@ -5,7 +5,7 @@
   padding: 20px;
   margin-bottom: 15px;
   min-width: 250px;
-  min-height: 140px;
+  /*min-height: 140px;*/
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #4a6da7;
   transition: all 0.3s ease;

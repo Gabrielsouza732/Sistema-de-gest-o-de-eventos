@@ -161,71 +161,80 @@ export default function Kanban() {
   };
 
   const handleDragEnd = async (event) => {
-    const { active, over } = event;
-    setActiveId(null);
+  const { active, over } = event;
+  setActiveId(null);
 
-    if (!over) return;
+  if (!over) return;
 
-    const activeContainer = findContainer(active.id);
-    const overContainer = findContainer(over.id);
+  const activeContainer = findContainer(active.id);
+  const overContainer = findContainer(over.id);
 
-    if (!activeContainer || !overContainer) return;
+  if (!activeContainer || !overContainer) return;
 
-    const activeStateKey = getStateKey(activeContainer);
-    const overStateKey = getStateKey(overContainer);
+  const activeStateKey = getStateKey(activeContainer);
+  const overStateKey = getStateKey(overContainer);
 
-    if (!activeStateKey || !overStateKey) return;
+  if (!activeStateKey || !overStateKey) return;
 
-    const isSameColumn = activeContainer === overContainer;
+  const isSameColumn = activeContainer === overContainer;
 
-    setEventsState((prev) => {
-      const activeItems = [...prev[activeStateKey]];
-      const overItems = [...prev[overStateKey]];
-      const activeIndex = activeItems.findIndex((item) => item.id === active.id);
+  setEventsState((prev) => {
+    const activeItems = [...prev[activeStateKey]];
+    const overItems = isSameColumn ? activeItems : [...prev[overStateKey]];
+    const activeIndex = activeItems.findIndex((item) => item.id === active.id);
 
-      if (activeIndex === -1) return prev;
+    if (activeIndex === -1) return prev;
 
-      const [movedItem] = activeItems.splice(activeIndex, 1);
+    const [movedItem] = activeItems.splice(activeIndex, 1);
 
+    if (!isSameColumn) {
+      // Mover para nova coluna - sempre adicionar no final
+      overItems.push(movedItem);
+    } else {
+      // Reordenar na mesma coluna
       const overIndex = overItems.findIndex((item) => item.id === over.id);
-      if (overIndex !== -1 && !isSameColumn) {
+      if (overIndex !== -1) {
         overItems.splice(overIndex, 0, movedItem);
       } else {
         overItems.push(movedItem);
       }
-
-      return {
-        ...prev,
-        [activeStateKey]: activeItems,
-        [overStateKey]: overItems,
-      };
-    });
-
-    if (!isSameColumn) {
-      try {
-        await updateEventStatus(active.id, overContainer);
-        console.log(`✅ Evento ${active.id} atualizado para: ${overContainer}`);
-      } catch (error) {
-        console.error("Erro ao atualizar status do evento:", error);
-        setEventsState((prev) => {
-          const revertActiveItems = [...prev[overStateKey]];
-          const revertOverItems = [...prev[activeStateKey]];
-          const revertIndex = revertActiveItems.findIndex((item) => item.id === active.id);
-          
-          if (revertIndex !== -1) {
-            const [revertItem] = revertActiveItems.splice(revertIndex, 1);
-            revertOverItems.push(revertItem);
-          }
-          
-          return {
-            ...prev,
-            [activeStateKey]: revertOverItems,
-            [overStateKey]: revertActiveItems,
-          };
-        });
-      }
     }
-  };
+
+    return {
+      ...prev,
+      [activeStateKey]: activeItems,
+      [overStateKey]: overItems,
+    };
+  });
+
+  // Atualizar status no backend apenas se mudou de coluna
+  if (!isSameColumn) {
+    try {
+      await updateEventStatus(active.id, overContainer);
+      console.log(`✅ Evento ${active.id} atualizado para: ${overContainer}`);
+    } catch (error) {
+      console.error("Erro ao atualizar status do evento:", error);
+      // Reverter em caso de erro
+      setEventsState((prev) => {
+        const revertActiveItems = [...prev[overStateKey]];
+        const revertOverItems = [...prev[activeStateKey]];
+        const revertIndex = revertActiveItems.findIndex((item) => item.id === active.id);
+        
+        if (revertIndex !== -1) {
+          const [revertItem] = revertActiveItems.splice(revertIndex, 1);
+          revertOverItems.push(revertItem);
+        }
+        
+        return {
+          ...prev,
+          [activeStateKey]: revertOverItems,
+          [overStateKey]: revertActiveItems,
+        };
+      });
+    }
+  }
+};
+
 
   const handleDragOver = (event) => {
     const { active, over } = event;
