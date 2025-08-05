@@ -270,23 +270,24 @@ export default function KanbanCard({ event, column, onDelete }) {
 
   // Funções dos Comentários
   const handleAddComment = async () => { // <--- Adicionar async
-  if (newComment.trim()) {
-    try {
-      const createdComment = await addComment({ // <--- Usar a API real
-        eventId: event.id,
-        text: newComment.trim(),
-        authorId: currentUser?.id || '1', // Usar o ID do usuário logado
-      });
-      
-      setComments(prev => [...prev, createdComment]);
-      setNewComment('');
-      console.log(`✅ Comentário adicionado: ${newComment.trim()}`);
-    } catch (error) {
-      console.error('Erro ao adicionar comentário:', error);
-      alert('Erro ao adicionar comentário. Tente novamente.');
+    if (newComment.trim()) {
+      try {
+        console.log("Author ID sendo enviado:", currentUser?.id || 'anonymous_user');
+        const createdComment = await addComment({ // <--- Usar a API real
+          eventId: event.id,
+          text: newComment.trim(),
+          authorId: 'anonymous_user', // Usar o ID do usuário logado
+        });
+        
+        setComments(prev => [...prev, createdComment]);
+        setNewComment('');
+        console.log(`✅ Comentário adicionado: ${newComment.trim()}`);
+      } catch (error) {
+        console.error('Erro ao adicionar comentário:', error);
+        alert('Erro ao adicionar comentário. Tente novamente.');
+      }
     }
-  }
-};
+  };
 
 
   return (
@@ -507,72 +508,44 @@ export default function KanbanCard({ event, column, onDelete }) {
                 <div className="modal-dropdown-content">
                   {loadingChecklist ? (
                     <p>Carregando checklist...</p>
+                  ) : checklistItems.length > 0 ? (
+                    <ul className="checklist-items">
+                      {checklistItems.map(item => (
+                        <li key={item.id} className="checklist-item">
+                          <input
+                            type="checkbox"
+                            checked={item.completed}
+                            onChange={() => toggleChecklistItem(item.id)}
+                          />
+                          <span className={`checklist-text ${item.completed ? 'completed' : ''}`}>{item.text}</span>
+                          <div className="checklist-item-actions">
+                            <select
+                              value={item.responsibleId || ''}
+                              onChange={(e) => assignResponsible(item.id, e.target.value)}
+                              className="responsible-select"
+                            >
+                              <option value="">Atribuir</option>
+                              {availableUsers.map(user => (
+                                <option key={user.id} value={user.id}>{user.name}</option>
+                              ))}
+                            </select>
+                            {item.responsibleUser && (
+                              <span className="responsible-name">({item.responsibleUser.name})</span>
+                            )}
+                            <button onClick={() => removeChecklistItem(item.id)} className="remove-item-button">
+                              <TrashIcon style={{ width: '16px', height: '16px' }} />
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
                   ) : (
-                    <>
-                      <div className="checklist-header">
-                        <button 
-                          className="add-checklist-item-button"
-                          onClick={addChecklistItem}
-                        >
-                          <PlusIcon style={{ width: '16px', height: '16px', marginRight: '4px' }} />
-                          Adicionar Item
-                        </button>
-                      </div>
-                      
-                      {checklistItems.length === 0 ? (
-                        <p>Nenhum item no checklist. Clique em "Adicionar Item" para começar.</p>
-                      ) : (
-                        <div className="checklist-items">
-                          {checklistItems.map((item) => (
-                            <div key={item.id} className="checklist-item">
-                              <div className="checklist-item-main">
-                                <button
-                                  className={`checklist-checkbox ${item.completed ? 'completed' : ''}`}
-                                  onClick={() => toggleChecklistItem(item.id)}
-                                >
-                                  {item.completed && <CheckCircleIcon style={{ width: '16px', height: '16px' }} />}
-                                </button>
-                                
-                                <span className={`checklist-text ${item.completed ? 'completed' : ''}`}>
-                                  {item.text}
-                                </span>
-                                
-                                <div className="checklist-actions">
-                                  {item.responsibleId && (
-                                    <span className="responsible-badge">
-                                      <UserIcon style={{ width: '14px', height: '14px', marginRight: '2px' }} />
-                                      {availableUsers.find(u => u.id === item.responsibleId)?.name || 'Usuário'}
-                                    </span>
-                                  )}
-                                  
-                                  <select
-                                    value={item.responsibleId || ''}
-                                    onChange={(e) => assignResponsible(item.id, e.target.value || null)}
-                                    className="responsible-select"
-                                  >
-                                    <option value="">Sem responsável</option>
-                                    {availableUsers.map(user => (
-                                      <option key={user.id} value={user.id}>
-                                        {user.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  
-                                  <button
-                                    className="remove-item-button"
-                                    onClick={() => removeChecklistItem(item.id)}
-                                    title="Remover item"
-                                  >
-                                    <TrashIcon style={{ width: '14px', height: '14px' }} />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </>
+                    <p>Nenhum item no checklist.</p>
                   )}
+                  <button onClick={addChecklistItem} className="add-item-button">
+                    <PlusIcon style={{ width: '16px', height: '16px', marginRight: '4px' }} />
+                    Adicionar Item
+                  </button>
                 </div>
               )}
 
@@ -594,44 +567,32 @@ export default function KanbanCard({ event, column, onDelete }) {
                 <div className="modal-dropdown-content">
                   {loadingComments ? (
                     <p>Carregando comentários...</p>
+                  ) : comments.length > 0 ? (
+                    <div className="comments-list">
+                      {comments.map(comment => (
+                        <div key={comment.id} className="comment-item">
+                          <p className="comment-text">{comment.text}</p>
+                          <span className="comment-meta">
+                            Por {comment.authorUser?.name || comment.author} em {new Date(comment.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    <>
-                      <div className="comments-list">
-                        {comments.length === 0 ? (
-                          <p>Nenhum comentário ainda. Seja o primeiro a comentar!</p>
-                        ) : (
-                          comments.map((comment) => (
-                            <div key={comment.id} className="comment-item">
-                              <div className="comment-header">
-                                <strong>{comment.author}</strong>
-                                <span className="comment-date">
-                                  {formatDate(comment.createdAt)}
-                                </span>
-                              </div>
-                              <p className="comment-text">{comment.text}</p>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      
-                      <div className="add-comment">
-                        <textarea
-                          value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                          placeholder="Adicione um comentário..."
-                          className="comment-input"
-                          rows={3}
-                        />
-                        <button
-                          onClick={handleAddComment}
-                          className="add-comment-button"
-                          disabled={!newComment.trim()}
-                        >
-                          Adicionar Comentário
-                        </button>
-                      </div>
-                    </>
+                    <p>Nenhum comentário ainda.</p>
                   )}
+                  <div className="new-comment-section">
+                    <textarea
+                      className="new-comment-textarea"
+                      placeholder="Adicionar um comentário..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      rows="3"
+                    ></textarea>
+                    <button onClick={handleAddComment} className="add-comment-button">
+                      Adicionar Comentário
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
