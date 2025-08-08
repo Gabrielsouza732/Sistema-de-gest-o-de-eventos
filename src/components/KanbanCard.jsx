@@ -1,11 +1,21 @@
-import React, { useState, useEffect } from 'react';
 import './KanbanCard.css';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { updateEvent, deleteEvent, fetchUsers, fetchChecklistItems, updateChecklistItem, createChecklistItem, deleteChecklistItem, fetchComments, addComment } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import {
+  updateEvent,
+  deleteEvent,
+  fetchUsers,
+  fetchChecklistItems,
+  updateChecklistItem,
+  createChecklistItem,
+  deleteChecklistItem,
+  fetchComments,
+  addComment,
+} from '../services/api';
 
 import { useUser } from '../contexts/UserContext';
-import { 
+import {
   CalendarDaysIcon,
   UserIcon,
   MapPinIcon,
@@ -20,9 +30,8 @@ import {
   ComputerDesktopIcon,
   BuildingOfficeIcon,
   ChevronDownIcon,
-  CheckCircleIcon,
   PlusIcon,
-  UserGroupIcon
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 export default function KanbanCard({ event, column, onDelete }) {
@@ -35,27 +44,101 @@ export default function KanbanCard({ event, column, onDelete }) {
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Estados de edição por campo
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(event.title);
-  
-  // Estados para seções expansíveis
-  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
-  const [checklistExpanded, setChecklistExpanded] = useState(false);
-  const [commentsExpanded, setCommentsExpanded] = useState(false);
 
-  // Estados para checklist
+  const [isEditingDate, setIsEditingDate] = useState(false);
+  const [editedStartDate, setEditedStartDate] = useState(event.startDate);
+  const [editedEndDate, setEditedEndDate] = useState(event.endDate);
+
+  const [isEditingResponsible, setIsEditingResponsible] = useState(false);
+  const [editedResponsible, setEditedResponsible] = useState(event.responsible || '');
+
+  const [isEditingOrganizer, setIsEditingOrganizer] = useState(false);
+  const [editedOrganizer, setEditedOrganizer] = useState(event.organizer || '');
+
+  const [isEditingLocal, setIsEditingLocal] = useState(false);
+  const [editedLocal, setEditedLocal] = useState(event.local || '');
+
+  const [isEditingType, setIsEditingType] = useState(false);
+  const [editedType, setEditedType] = useState(event.type || '');
+
+  const [isEditingFormat, setIsEditingFormat] = useState(false);
+  const [editedFormat, setEditedFormat] = useState(event.format || '');
+
+  const [isEditingPriority, setIsEditingPriority] = useState(false);
+  const [editedPriority, setEditedPriority] = useState(event.priority || '');
+
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
+  const [editedBudget, setEditedBudget] = useState(event.estimatedBudget || '');
+
+  const [isEditingParticipants, setIsEditingParticipants] = useState(false);
+  const [editedParticipants, setEditedParticipants] = useState(event.participants || '');
+
+  const [isEditingCostCenter, setIsEditingCostCenter] = useState(false);
+  const [editedCostCenter, setEditedCostCenter] = useState(event.costCenter || '');
+
+  // Para descrição completa
+  const [descriptionExpanded, setDescriptionExpanded] = useState(true);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editedDescription, setEditedDescription] = useState(event.description || '');
+
+  // Checklist e comentários
+  const [checklistExpanded, setChecklistExpanded] = useState(true);
   const [checklistItems, setChecklistItems] = useState([]);
-  const [loadingChecklist, setLoadingChecklist] = useState(false);
+  const [newChecklistText, setNewChecklistText] = useState('');
 
-  // Estados para usuários/membros
-  const [availableUsers, setAvailableUsers] = useState([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-
-  // Estados para comentários
+  const [commentsExpanded, setCommentsExpanded] = useState(true);
   const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
-  const [loadingComments, setLoadingComments] = useState(false);
+  const [newCommentText, setNewCommentText] = useState('');
 
+  // Membros/equipe
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetchUsers().then(setUsers);
+    fetchChecklistItems(event.id).then(setChecklistItems);
+    fetchComments(event.id).then(setComments);
+  }, [event.id]);
+
+  // Checklist
+  const handleAddChecklist = async () => {
+    if (!newChecklistText.trim()) return;
+    const item = await createChecklistItem(event.id, { text: newChecklistText });
+    setChecklistItems(items => [...items, item]);
+    setNewChecklistText('');
+  };
+  const handleToggleChecklist = async (item) => {
+    await updateChecklistItem(item.id, { done: !item.done });
+    setChecklistItems(items =>
+      items.map(i => i.id === item.id ? { ...i, done: !i.done } : i)
+    );
+  };
+  const handleDeleteChecklist = async (item) => {
+    await deleteChecklistItem(item.id);
+    setChecklistItems(items => items.filter(i => i.id !== item.id));
+  };
+
+  // Comentários
+  const handleAddComment = async () => {
+    if (!newCommentText.trim()) return;
+    const comment = await addComment(event.id, { text: newCommentText });
+    setComments(comments => [...comments, comment]);
+    setNewCommentText('');
+  };
+
+  // Callback para atualizar campo no backend
+  const handleUpdateField = async (field, value) => {
+    try {
+      await updateEvent(event.id, { [field]: value });
+    } catch (err) {
+      alert('Erro ao atualizar campo!');
+    }
+  };
+
+  // Helpers de formatação
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
@@ -65,537 +148,283 @@ export default function KanbanCard({ event, column, onDelete }) {
     return `${day}/${month}/${year}`;
   };
 
-  const formatDateRange = (startDate, endDate) => {
-    const formattedStart = formatDate(startDate);
-    const formattedEnd = formatDate(endDate);
-    
-    if (formattedStart === "N/A" && formattedEnd === "N/A") {
-      return "N/A";
-    } else if (formattedStart === "N/A") {
-      return formattedEnd;
-    } else if (formattedEnd === "N/A") {
-      return formattedStart;
-    } else {
-      return `${formattedStart} - ${formattedEnd}`;
-    }
-  };
-
-  const formatBudget = (budget) => {
-    if (budget === undefined || budget === null || isNaN(Number(budget))) return "N/A";
-    return Number(budget).toLocaleString("pt-BR", {
-      style: 'currency',
-      currency: 'BRL'
-    });
-  };
-
-  const getPriorityColor = (priority) => {
-    switch(priority?.toLowerCase()) {
-      case 'alta': return '#e74c3c';
-      case 'média': return '#f39c12';
-      case 'baixa': return '#3498db';
-      default: return '#95a5a6';
-    }
-  };
-
-  // Carregar dados quando o modal abrir
-  useEffect(() => {
-    if (isModalOpen) {
-      loadChecklistItems();
-      loadUsers();
-      loadComments();
-    }
-  }, [isModalOpen]);
-
-  const loadChecklistItems = async () => {
-    setLoadingChecklist(true);
-    try {
-      const items = await fetchChecklistItems(event.id);
-      setChecklistItems(items);
-    } catch (error) {
-      console.error('Erro ao carregar checklist:', error);
-      setChecklistItems([]);
-    } finally {
-      setLoadingChecklist(false);
-    }
-  };
-
-  const loadUsers = async () => {
-    setLoadingUsers(true);
-    try {
-      const users = await fetchUsers();
-      setAvailableUsers(users);
-      console.log('✅ 5 usuários carregados do backend');
-    } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
-      setAvailableUsers([]);
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
-
-  const loadComments = async () => {
-  setLoadingComments(true);
-  try {
-    const fetchedComments = await fetchComments(event.id); // <--- Usar a API real
-    setComments(fetchedComments);
-  } catch (error) {
-    console.error('Erro ao carregar comentários:', error);
-    setComments([]);
-  } finally {
-    setLoadingComments(false);
-  }
-};
-
-  const handleOpenModal = (e) => {
-    e.stopPropagation();
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = (e) => {
-    if (e) e.stopPropagation();
-    setIsModalOpen(false);
-  };
-
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      setIsModalOpen(false);
-    }
-  };
-
-  const handleDeleteEvent = async () => {
-    if (window.confirm(`Tem certeza que deseja excluir o evento "${event.title}"? Esta ação é irreversível.`)) {
-      try {
-        await deleteEvent(event.id);
-        if (onDelete) onDelete(event.id);
-        handleCloseModal();
-        console.log(`✅ Evento "${event.title}" (${event.id}) excluído com sucesso.`);
-      } catch (error) {
-        console.error('Erro ao excluir evento:', error);
-        alert('Erro ao excluir evento. Tente novamente.');
-      }
-    }
-  };
-
-  const handleTitleChange = (e) => {
-    setEditedTitle(e.target.value);
-  };
-
-  const handleSaveTitle = async () => {
-    try {
-      await updateEvent(event.id, { title: editedTitle });
-      setIsEditingTitle(false);
-      console.log(`✅ Título do evento atualizado para: ${editedTitle}`);
-    } catch (error) {
-      console.error('Erro ao atualizar título:', error);
-      setEditedTitle(event.title); // Reverter em caso de erro
-    }
-  };
-
-  const handleKeyDown = (e, saveFunction, cancelFunction) => {
-    if (e.key === 'Enter') {
-      saveFunction();
-    } else if (e.key === 'Escape') {
-      cancelFunction();
-      setIsEditingTitle(false);
-    }
-  };
-
-  // Funções do Checklist
-  const toggleChecklistItem = async (itemId) => {
-    try {
-      const item = checklistItems.find(i => i.id === itemId);
-      const updatedItem = await updateChecklistItem(itemId, { 
-        completed: !item.completed 
-      });
-      
-      setChecklistItems(prev => 
-        prev.map(i => i.id === itemId ? updatedItem : i)
-      );
-      
-      console.log(`✅ Item do checklist ${updatedItem.completed ? 'marcado' : 'desmarcado'}: ${item.text}`);
-    } catch (error) {
-      console.error('Erro ao atualizar item do checklist:', error);
-    }
-  };
-
-  const addChecklistItem = async () => {
-    const newItemText = prompt('Digite o nome do novo item:');
-    if (newItemText && newItemText.trim()) {
-      try {
-        const newItem = await createChecklistItem({
-          eventId: event.id,
-          text: newItemText.trim(),
-          completed: false,
-          responsibleId: null
-        });
-        
-        setChecklistItems(prev => [...prev, newItem]);
-        console.log(`✅ Novo item adicionado ao checklist: ${newItemText}`);
-      } catch (error) {
-        console.error('Erro ao adicionar item ao checklist:', error);
-        alert('Erro ao adicionar item. Tente novamente.');
-      }
-    }
-  };
-
-  const removeChecklistItem = async (itemId) => {
-    if (window.confirm('Tem certeza que deseja remover este item?')) {
-      try {
-        await deleteChecklistItem(itemId);
-        setChecklistItems(prev => prev.filter(i => i.id !== itemId));
-        console.log(`✅ Item removido do checklist`);
-      } catch (error) {
-        console.error('Erro ao remover item do checklist:', error);
-        alert('Erro ao remover item. Tente novamente.');
-      }
-    }
-  };
-
-  const assignResponsible = async (itemId, userId) => {
-    try {
-      const updatedItem = await updateChecklistItem(itemId, { 
-        responsibleId: userId 
-      });
-      
-      setChecklistItems(prev => 
-        prev.map(i => i.id === itemId ? updatedItem : i)
-      );
-      
-      const user = availableUsers.find(u => u.id === userId);
-      console.log(`✅ Responsável atribuído: ${user?.name} para item do checklist`);
-    } catch (error) {
-      console.error('Erro ao atribuir responsável:', error);
-    }
-  };
-
-  // Funções dos Comentários
-  const handleAddComment = async () => { // <--- Adicionar async
-    if (newComment.trim()) {
-      try {
-        console.log("Author ID sendo enviado:", currentUser?.id || 'anonymous_user');
-        const createdComment = await addComment({ // <--- Usar a API real
-          eventId: event.id,
-          text: newComment.trim(),
-          authorId: 'anonymous_user', // Usar o ID do usuário logado
-        });
-        
-        setComments(prev => [...prev, createdComment]);
-        setNewComment('');
-        console.log(`✅ Comentário adicionado: ${newComment.trim()}`);
-      } catch (error) {
-        console.error('Erro ao adicionar comentário:', error);
-        alert('Erro ao adicionar comentário. Tente novamente.');
-      }
-    }
-  };
-
-
+  // Renderização do modal
   return (
     <>
-      {/* Card compacto */}
-      <div 
+      {/* Card resumido */}
+      <div
         ref={setNodeRef}
         style={style}
+        className={`kanban-card ${column}`}
         {...attributes}
         {...listeners}
-        className={`kanban-card ${column.toLowerCase().replace(" ", "-")}`}
+        onClick={() => setIsModalOpen(true)}
       >
-        {/* Header do Card */}
         <div className="card-header">
-          <h4 className="card-title">{event.title}</h4>
-          <button 
-            className="card-expand-button"
-            onClick={handleOpenModal}
-            title="Expandir card"
+          {isEditingTitle ? (
+            <input
+              value={editedTitle}
+              autoFocus
+              onChange={e => setEditedTitle(e.target.value)}
+              onBlur={() => {
+                setIsEditingTitle(false);
+                if (editedTitle !== event.title) {
+                  handleUpdateField('title', editedTitle);
+                }
+              }}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  setIsEditingTitle(false);
+                  if (editedTitle !== event.title) {
+                    handleUpdateField('title', editedTitle);
+                  }
+                }
+              }}
+              className="card-title-input"
+            />
+          ) : (
+            <h3
+              className="card-title"
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                setIsEditingTitle(true);
+              }}
+            >
+              {editedTitle}
+            </h3>
+          )}
+          {/* Botão de deletar */}
+          <button
+            className="delete-button"
+            onClick={e => {
+              e.stopPropagation();
+              if (window.confirm("Deseja realmente excluir este evento?")) {
+                deleteEvent(event.id);
+                if (onDelete) onDelete(event.id);
+                setIsModalOpen(false);
+              }
+            }}
+            title="Excluir evento"
           >
-            ⤢
+            <TrashIcon style={{ width: 20, color: "#d33" }} />
           </button>
-        </div>
-
-        {/* Informações principais */}
-        <div className="card-info">
-          <div className="info-item">
-            <CalendarDaysIcon style={{ width: '16px', height: '16px', marginRight: '4px' }} />
-            <span className="info-label">Data:</span>
-            <span className="info-value">{formatDateRange(event.startDate, event.endDate)}</span>
-          </div>
-
-          <div className="info-item">
-            <UserIcon style={{ width: '16px', height: '16px', marginRight: '4px' }} />
-            <span className="info-label">Responsável:</span>
-            <span className="info-value">{event.requester || 'N/A'}</span>
-          </div>
-
-          <div className="info-item">
-            <ExclamationTriangleIcon style={{ width: '16px', height: '16px', marginRight: '4px' }} />
-            <span className="info-label">Status:</span>
-            <span className="info-value">{event.status || 'N/A'}</span>
-          </div>
+          <button
+            className="close-button"
+            onClick={e => {
+              e.stopPropagation();
+              setIsModalOpen(false);
+            }}
+            title="Fechar"
+          >
+            <XMarkIcon style={{ width: 20 }} />
+          </button>
         </div>
       </div>
 
-      {/* Modal renderizado FORA do card */}
+      {/* Modal de detalhes */}
       {isModalOpen && (
-        <div className="modal-backdrop" onClick={handleBackdropClick}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            {/* Header do Modal */}
-            <div className="modal-header">
-              {isEditingTitle ? (
-                <input
-                  type="text"
-                  value={editedTitle}
-                  onChange={handleTitleChange}
-                  onBlur={handleSaveTitle}
-                  onKeyDown={(e) => handleKeyDown(e, handleSaveTitle, () => setEditedTitle(event.title))}
-                  className="modal-title-input"
-                  autoFocus
-                />
-              ) : (
-                <h2 
-                  className="modal-title"
-                  onDoubleClick={() => setIsEditingTitle(true)}
-                  title="Duplo clique para editar"
-                >
-                  {editedTitle || "Sem Título"}
-                </h2>
-              )}
-              <div className="modal-actions">
-                <button 
-                  className="modal-delete-button" 
-                  onClick={handleDeleteEvent} 
-                  title="Excluir Evento"
-                >
-                  <TrashIcon style={{ width: '20px', height: '20px' }} />
-                </button>
-                <button 
-                  className="modal-close-button" 
-                  onClick={handleCloseModal} 
-                  title="Fechar"
-                >
-                  <XMarkIcon style={{ width: '20px', height: '20px' }} />
-                </button>
+        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="modal-header-v2">
+              <h2 className="modal-title-v2">{editedTitle}</h2>
+              <button className="close-button" onClick={() => setIsModalOpen(false)}>
+                <XMarkIcon style={{ width: 22 }} />
+              </button>
+            </div>
+
+            {/* Informações principais em grid */}
+            <div className="modal-grid-v2">
+              <div>
+                <CalendarDaysIcon className="info-icon" />
+                <span>{formatDate(editedStartDate)} - {formatDate(editedEndDate)}</span>
+              </div>
+              <div>
+                <UserIcon className="info-icon" />
+                <span><b>Responsável:</b> {editedResponsible}</span>
+              </div>
+              <div>
+                <UsersIcon className="info-icon" />
+                <span><b>Organizador:</b> {editedOrganizer}</span>
+              </div>
+              <div>
+                <MapPinIcon className="info-icon" />
+                <span><b>Local:</b> {editedLocal}</span>
+              </div>
+              <div>
+                <ExclamationTriangleIcon className="info-icon" />
+                <span>
+                  <b>Prioridade:</b>{' '}
+                  <span style={{
+                    color: editedPriority === 'ALTA' ? '#d32f2f' :
+                          editedPriority === 'MÉDIA' ? '#ed6c02' : '#388e3c',
+                    fontWeight: 'bold'
+                  }}>{editedPriority}</span>
+                </span>
+              </div>
+              <div>
+                <TagIcon className="info-icon" />
+                <span><b>Tipo:</b> {editedType || 'N/A'}</span>
+              </div>
+              <div>
+                <ComputerDesktopIcon className="info-icon" />
+                <span><b>Formato:</b> {editedFormat || 'N/A'}</span>
+              </div>
+              <div>
+                <CurrencyDollarIcon className="info-icon" />
+                <span><b>Orçamento:</b> {Number(editedBudget).toLocaleString("pt-BR", { style: 'currency', currency: 'BRL' })}</span>
+              </div>
+              <div>
+                <UserGroupIcon className="info-icon" />
+                <span><b>Participantes:</b> {editedParticipants || 'N/A'}</span>
+              </div>
+              <div>
+                <BuildingOfficeIcon className="info-icon" />
+                <span><b>Centro de Custo:</b> {editedCostCenter || 'N/A'}</span>
               </div>
             </div>
 
-            {/* Corpo do Modal */}
-            <div className="modal-body">
-              {/* Informações principais em grid */}
-              <div className="modal-info-grid">
-                <div className="modal-info-item">
-                  <span className="modal-info-label">
-                    <CalendarDaysIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                    Data:
-                  </span>
-                  <span className="modal-info-value">{formatDateRange(event.startDate, event.endDate)}</span>
-                </div>
-                
-                <div className="modal-info-item">
-                  <span className="modal-info-label">
-                    <UserIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                    Responsável:
-                  </span>
-                  <span className="modal-info-value">{event.requester || 'N/A'}</span>
-                </div>
-
-                <div className="modal-info-item">
-                  <span className="modal-info-label">
-                    <UserIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                    Organizador:
-                  </span>
-                  <span className="modal-info-value">{event.organizer || 'N/A'}</span>
-                </div>
-
-                <div className="modal-info-item">
-                  <span className="modal-info-label">
-                    <MapPinIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                    Local:
-                  </span>
-                  <span className="modal-info-value">{event.location || 'N/A'}</span>
-                </div>
-
-                <div className="modal-info-item">
-                  <span className="modal-info-label">
-                    <TagIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                    Tipo:
-                  </span>
-                  <span className="modal-info-value">{event.eventType || 'N/A'}</span>
-                </div>
-
-                <div className="modal-info-item">
-                  <span className="modal-info-label">
-                    <ComputerDesktopIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                    Formato:
-                  </span>
-                  <span className="modal-info-value">{event.eventFormat || 'N/A'}</span>
-                </div>
-
-                <div className="modal-info-item">
-                  <span className="modal-info-label">
-                    <ExclamationTriangleIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                    Prioridade:
-                  </span>
-                  <span 
-                    className="modal-priority-badge"
-                    style={{ color: getPriorityColor(event.priority || 'Alta') }}
-                  >
-                    {event.priority || 'Alta'}
-                  </span>
-                </div>
-
-                <div className="modal-info-item">
-                  <span className="modal-info-label">
-                    <CurrencyDollarIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                    Orçamento:
-                  </span>
-                  <span className="modal-info-value">{formatBudget(event.estimatedBudget)}</span>
-                </div>
-
-                <div className="modal-info-item">
-                  <span className="modal-info-label">
-                    <UsersIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                    Participantes:
-                  </span>
-                  <span className="modal-info-value">{event.estimatedAttendees || 'N/A'}</span>
-                </div>
-
-                <div className="modal-info-item">
-                  <span className="modal-info-label">
-                    <BuildingOfficeIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                    Centro de Custo:
-                  </span>
-                  <span className="modal-info-value">{event.costCenter || 'N/A'}</span>
-                </div>
-              </div>
-
-              {/* Seção de Descrição Expansível */}
-              <button 
-                className="modal-dropdown-header"
-                onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-              >
-                <span className="modal-dropdown-title">Descrição Completa</span>
-                <ChevronDownIcon
-                  style={{ width: '16px', height: '16px' }}
-                  className={`transition-transform duration-200 ${descriptionExpanded ? 'rotate-180' : ''}`}
-                />
+            {/* Descrição */}
+            <section className="section-v2">
+              <button className="section-title-v2" onClick={() => setDescriptionExpanded(!descriptionExpanded)}>
+                Descrição Completa
+                <ChevronDownIcon style={{
+                  width: 20,
+                  marginLeft: 10,
+                  transform: descriptionExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s'
+                }} />
               </button>
               {descriptionExpanded && (
-                <div className="modal-dropdown-content">
-                  <p>{event.description || "Nenhuma descrição fornecida."}</p>
-                  {event.notes && (
-                    <div>
-                      <strong>Observações:</strong>
-                      <p>{event.notes}</p>
+                <div style={{ marginTop: 8 }}>
+                  {isEditingDescription ? (
+                    <textarea
+                      value={editedDescription}
+                      autoFocus
+                      onChange={e => setEditedDescription(e.target.value)}
+                      onBlur={() => {
+                        setIsEditingDescription(false);
+                        if (editedDescription !== event.description)
+                          handleUpdateField('description', editedDescription);
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          setIsEditingDescription(false);
+                          if (editedDescription !== event.description)
+                            handleUpdateField('description', editedDescription);
+                        }
+                      }}
+                      className="description-textarea-v2"
+                    />
+                  ) : (
+                    <div className="description-view-v2" onDoubleClick={() => setIsEditingDescription(true)}>
+                      {editedDescription}
                     </div>
                   )}
                 </div>
               )}
+            </section>
 
-              {/* Seção de Checklist Expansível */}
-              <button 
-                className="modal-dropdown-header"
-                onClick={() => setChecklistExpanded(!checklistExpanded)}
-              >
-                <span className="modal-dropdown-title">
-                  <ClipboardDocumentListIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                  Checklist ({checklistItems.length} itens)
-                </span>
-                <ChevronDownIcon
-                  style={{ width: '16px', height: '16px' }}
-                  className={`transition-transform duration-200 ${checklistExpanded ? 'rotate-180' : ''}`}
-                />
+            {/* Checklist */}
+            <section className="section-v2">
+              <button className="section-title-v2" onClick={() => setChecklistExpanded(s => !s)}>
+                Check List
+                <ChevronDownIcon style={{
+                  width: 20,
+                  marginLeft: 10,
+                  transform: checklistExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s'
+                }} />
               </button>
               {checklistExpanded && (
-                <div className="modal-dropdown-content">
-                  {loadingChecklist ? (
-                    <p>Carregando checklist...</p>
-                  ) : checklistItems.length > 0 ? (
-                    <ul className="checklist-items">
-                      {checklistItems.map(item => (
-                        <li key={item.id} className="checklist-item">
-                          <input
-                            type="checkbox"
-                            checked={item.completed}
-                            onChange={() => toggleChecklistItem(item.id)}
-                          />
-                          <span className={`checklist-text ${item.completed ? 'completed' : ''}`}>{item.text}</span>
-                          <div className="checklist-item-actions">
-                            <select
-                              value={item.responsibleId || ''}
-                              onChange={(e) => assignResponsible(item.id, e.target.value)}
-                              className="responsible-select"
-                            >
-                              <option value="">Atribuir</option>
-                              {availableUsers.map(user => (
-                                <option key={user.id} value={user.id}>{user.name}</option>
-                              ))}
-                            </select>
-                            {item.responsibleUser && (
-                              <span className="responsible-name">({item.responsibleUser.name})</span>
-                            )}
-                            <button onClick={() => removeChecklistItem(item.id)} className="remove-item-button">
-                              <TrashIcon style={{ width: '16px', height: '16px' }} />
-                            </button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>Nenhum item no checklist.</p>
-                  )}
-                  <button onClick={addChecklistItem} className="add-item-button">
-                    <PlusIcon style={{ width: '16px', height: '16px', marginRight: '4px' }} />
-                    Adicionar Item
-                  </button>
-                </div>
+                <>
+                  <div className="checklist-list-v2">
+                    {checklistItems.length === 0 && <div className="empty-message-v2">Nenhum item no checklist.</div>}
+                    {checklistItems.map(item => (
+                      <label className="checklist-item-v2" key={item.id}>
+                        <input
+                          type="checkbox"
+                          checked={item.done}
+                          onChange={() => handleToggleChecklist(item)}
+                        />
+                        <span className={item.done ? 'checklist-done-v2' : ''}>{item.text}</span>
+                        <button className="delete-checklist-v2" onClick={() => handleDeleteChecklist(item)}>✕</button>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="checklist-add-v2">
+                    <input
+                      type="text"
+                      value={newChecklistText}
+                      onChange={e => setNewChecklistText(e.target.value)}
+                      placeholder="Novo item"
+                      onKeyDown={e => { if(e.key==="Enter") handleAddChecklist(); }}
+                    />
+                    <button onClick={handleAddChecklist} className="add-btn-v2">+ Adicionar Item</button>
+                  </div>
+                </>
               )}
+            </section>
 
-              {/* Seção de Comentários Expansível */}
-              <button 
-                className="modal-dropdown-header"
-                onClick={() => setCommentsExpanded(!commentsExpanded)}
-              >
-                <span className="modal-dropdown-title">
-                  <ChatBubbleLeftRightIcon style={{ width: '20px', height: '20px', marginRight: '6px' }} />
-                  Comentários ({comments.length})
-                </span>
-                <ChevronDownIcon
-                  style={{ width: '16px', height: '16px' }}
-                  className={`transition-transform duration-200 ${commentsExpanded ? 'rotate-180' : ''}`}
-                />
+            {/* Comentários */}
+            <section className="section-v2">
+              <button className="section-title-v2" onClick={() => setCommentsExpanded(s => !s)}>
+                Comentários
+                <ChevronDownIcon style={{
+                  width: 20,
+                  marginLeft: 10,
+                  transform: commentsExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s'
+                }} />
               </button>
               {commentsExpanded && (
-                <div className="modal-dropdown-content">
-                  {loadingComments ? (
-                    <p>Carregando comentários...</p>
-                  ) : comments.length > 0 ? (
-                    <div className="comments-list">
-                      {comments.map(comment => (
-                        <div key={comment.id} className="comment-item">
-                          <p className="comment-text">{comment.text}</p>
-                          <span className="comment-meta">
-                            Por {comment.authorUser?.name || comment.author} em {new Date(comment.createdAt).toLocaleString()}
-                          </span>
+                <>
+                  <div className="comments-list-v2">
+                    {comments.length === 0 && <div className="empty-message-v2">Nenhum comentário ainda.</div>}
+                    {comments.map(comment => (
+                      <div className="comment-item-v2" key={comment.id}>
+                        <div className="comment-avatar-v2">{comment.author?.name?.[0] || 'U'}</div>
+                        <div>
+                          <div className="comment-author-v2">{comment.author?.name || 'Usuário'} <span className="comment-date-v2">{new Date(comment.createdAt).toLocaleString()}</span></div>
+                          <div className="comment-text-v2">{comment.text}</div>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p>Nenhum comentário ainda.</p>
-                  )}
-                  <div className="new-comment-section">
-                    <textarea
-                      className="new-comment-textarea"
-                      placeholder="Adicionar um comentário..."
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      rows="3"
-                    ></textarea>
-                    <button onClick={handleAddComment} className="add-comment-button">
-                      Adicionar Comentário
-                    </button>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                  <div className="comment-add-v2">
+                    <input
+                      type="text"
+                      value={newCommentText}
+                      onChange={e => setNewCommentText(e.target.value)}
+                      placeholder="Adicionar comentário..."
+                      onKeyDown={e => { if(e.key==="Enter") handleAddComment(); }}
+                    />
+                    <button onClick={handleAddComment} className="add-btn-v2">Comentar</button>
+                  </div>
+                </>
               )}
-            </div>
+            </section>
+
+            {/* Membros */}
+            <section className="section-v2">
+              <div className="section-title-v2" style={{cursor:'default'}}>
+                <UsersIcon style={{width:18,marginRight:6,verticalAlign:'middle'}} />
+                Membros da Equipe
+                <button className="add-member-btn-v2" style={{float:'right'}}>+ Adicionar Membro</button>
+              </div>
+              <div className="members-list-v2">
+                {users.map((user, i) => (
+                  <div className="member-card-v2" key={user.id || i}>
+                    <span className="member-avatar-v2">{user.name?.[0] || 'U'}</span>
+                    <div>
+                      <div className="member-name-v2">{user.name}</div>
+                      <div className="member-role-v2">{user.role || 'Membro'}</div>
+                    </div>
+                  </div>
+                ))}
+                {users.length === 0 && <span className="empty-message-v2">Nenhum membro encontrado.</span>}
+              </div>
+            </section>
           </div>
         </div>
       )}
