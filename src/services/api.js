@@ -96,6 +96,19 @@ export const deleteChecklistItem = async (id) => {
   }
 };
 
+export const notifyAssignment = async (checklistItemId) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/notifications/assignment`, {
+      checklistItemId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao notificar atribuição:", error);
+    throw error;
+  }
+};
+
+
 // ========== COMENTÁRIOS ==========
 
 export const fetchComments = async (eventId) => {

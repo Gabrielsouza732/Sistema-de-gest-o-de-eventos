@@ -34,6 +34,29 @@ import {
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
+const CHECKLIST_TEMPLATES = {
+  "Conferência": [
+    "Definir palestrantes",
+    "Reservar auditório",
+    "Preparar material promocional"
+  ],
+  "Workshop": [
+    "Confirmar instrutor",
+    "Criar lista de participantes",
+    "Organizar coffee break"
+  ],
+  "Festa": [
+    "Definir playlist",
+    "Contratar buffet",
+    "Decorar o espaço"
+  ],
+  __default: [
+    "Definir orçamento",
+    "Montar cronograma",
+    "Confirmar local"
+  ],
+};
+
 export default function KanbanCard({ event, column, onDelete }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: event.id });
   const { currentUser } = useUser();
@@ -98,18 +121,40 @@ export default function KanbanCard({ event, column, onDelete }) {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    fetchUsers().then(setUsers);
-    fetchChecklistItems(event.id).then(setChecklistItems);
-    fetchComments(event.id).then(setComments);
-  }, [event.id]);
+  fetchUsers().then(setUsers);
+
+  (async () => {
+    const data = await fetchChecklistItems(event.id);
+    setChecklistItems(data);
+
+    if (Array.isArray(data) && data.length === 0) {
+      const texts = CHECKLIST_TEMPLATES[event.type] || CHECKLIST_TEMPLATES.__default;
+      if (texts?.length) {
+        const created = await Promise.all(
+          texts.map(text => createChecklistItem({ eventId: event.id, text }))
+        );
+        setChecklistItems(created);
+      }
+    }
+  })();
+
+  fetchComments(event.id).then(setComments);
+}, [event.id]);
+
 
   // Checklist
   const handleAddChecklist = async () => {
-    if (!newChecklistText.trim()) return;
-    const item = await createChecklistItem(event.id, { text: newChecklistText });
-    setChecklistItems(items => [...items, item]);
-    setNewChecklistText('');
+  if (!newChecklistText.trim()) return;
+
+  const item = await createChecklistItem({
+    eventId: event.id,
+    text: newChecklistText,
+  });
+
+  setChecklistItems(items => [...items, item]); // adiciona em sequência
+  setNewChecklistText('');
   };
+
   const handleToggleChecklist = async (item) => {
     await updateChecklistItem(item.id, { done: !item.done });
     setChecklistItems(items =>
@@ -120,6 +165,28 @@ export default function KanbanCard({ event, column, onDelete }) {
     await deleteChecklistItem(item.id);
     setChecklistItems(items => items.filter(i => i.id !== item.id));
   };
+
+  const handleChangeChecklistResponsible = async (item, userId) => {
+  const payload = { responsibleId: userId || null };
+
+  const updated = await updateChecklistItem(item.id, payload);
+
+  setChecklistItems(items =>
+    items.map(i => (i.id === item.id ? { ...i, ...updated } : i))
+  );
+
+  if (userId) {
+    try {
+      await notifyAssignment(item.id);
+      // opcional: feedback
+      // alert(`Atividade atribuída a ${users.find(u => u.id === userId)?.name || 'usuário'}`);
+    } catch (e) {
+      console.error("Falha ao notificar atribuição:", e);
+    }
+  }
+};
+
+
 
   // Comentários
   const handleAddComment = async () => {
