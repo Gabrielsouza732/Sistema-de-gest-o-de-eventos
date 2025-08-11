@@ -148,6 +148,25 @@ export default function KanbanCard({ event, column, onDelete }) {
     return `${day}/${month}/${year}`;
   };
 
+  // Helpers adicionais (edição)
+const toInputDate = (value) => (value ? new Date(value).toISOString().slice(0, 10) : "");
+const handleKey = (e, onSave, onCancel) => {
+  if (e.key === "Enter") onSave();
+  if (e.key === "Escape") onCancel?.();
+};
+const saveField = async (field, value, endEdit) => {
+  try { await handleUpdateField(field, value); } finally { endEdit(false); }
+};
+const saveDates = async () => {
+  try {
+    await handleUpdateField("startDate", editedStartDate);
+    await handleUpdateField("endDate", editedEndDate);
+  } finally {
+    setIsEditingDate(false);
+  }
+};
+
+
   // Renderização do modal
   return (
     <>
@@ -235,54 +254,193 @@ export default function KanbanCard({ event, column, onDelete }) {
 
             {/* Informações principais em grid */}
             <div className="modal-grid-v2">
-              <div>
-                <CalendarDaysIcon className="info-icon" />
-                <span>{formatDate(editedStartDate)} - {formatDate(editedEndDate)}</span>
-              </div>
-              <div>
-                <UserIcon className="info-icon" />
-                <span><b>Responsável:</b> {editedResponsible}</span>
-              </div>
-              <div>
-                <UsersIcon className="info-icon" />
-                <span><b>Organizador:</b> {editedOrganizer}</span>
-              </div>
-              <div>
-                <MapPinIcon className="info-icon" />
-                <span><b>Local:</b> {editedLocal}</span>
-              </div>
-              <div>
-                <ExclamationTriangleIcon className="info-icon" />
-                <span>
-                  <b>Prioridade:</b>{' '}
-                  <span style={{
-                    color: editedPriority === 'ALTA' ? '#d32f2f' :
-                          editedPriority === 'MÉDIA' ? '#ed6c02' : '#388e3c',
-                    fontWeight: 'bold'
-                  }}>{editedPriority}</span>
-                </span>
-              </div>
-              <div>
-                <TagIcon className="info-icon" />
-                <span><b>Tipo:</b> {editedType || 'N/A'}</span>
-              </div>
-              <div>
-                <ComputerDesktopIcon className="info-icon" />
-                <span><b>Formato:</b> {editedFormat || 'N/A'}</span>
-              </div>
-              <div>
-                <CurrencyDollarIcon className="info-icon" />
-                <span><b>Orçamento:</b> {Number(editedBudget).toLocaleString("pt-BR", { style: 'currency', currency: 'BRL' })}</span>
-              </div>
-              <div>
-                <UserGroupIcon className="info-icon" />
-                <span><b>Participantes:</b> {editedParticipants || 'N/A'}</span>
-              </div>
-              <div>
-                <BuildingOfficeIcon className="info-icon" />
-                <span><b>Centro de Custo:</b> {editedCostCenter || 'N/A'}</span>
-              </div>
-            </div>
+  {/* Datas */}
+  <div onDoubleClick={() => setIsEditingDate(true)}>
+    <CalendarDaysIcon className="info-icon" />
+    {isEditingDate ? (
+      <div>
+        <input
+          type="date"
+          value={toInputDate(editedStartDate)}
+          onChange={(e) => setEditedStartDate(e.target.value)}
+          onKeyDown={(e) => handleKey(e, saveDates, () => setIsEditingDate(false))}
+          style={{ marginRight: 6 }}
+        />
+        <span> - </span>
+        <input
+          type="date"
+          value={toInputDate(editedEndDate)}
+          onChange={(e) => setEditedEndDate(e.target.value)}
+          onBlur={saveDates}
+          onKeyDown={(e) => handleKey(e, saveDates, () => setIsEditingDate(false))}
+          style={{ marginLeft: 6 }}
+        />
+      </div>
+    ) : (
+      <span>{formatDate(editedStartDate)} - {formatDate(editedEndDate)}</span>
+    )}
+  </div>
+
+  {/* Responsável */}
+  <div onDoubleClick={() => setIsEditingResponsible(true)}>
+    <UserIcon className="info-icon" />
+    {isEditingResponsible ? (
+      <input
+        autoFocus
+        value={editedResponsible}
+        onChange={(e) => setEditedResponsible(e.target.value)}
+        onBlur={() => saveField("responsible", editedResponsible, setIsEditingResponsible)}
+        onKeyDown={(e) => handleKey(e, () => saveField("responsible", editedResponsible, setIsEditingResponsible), () => setIsEditingResponsible(false))}
+      />
+    ) : (
+      <span><b>Responsável:</b> {editedResponsible || "N/A"}</span>
+    )}
+  </div>
+
+  {/* Organizador */}
+  <div onDoubleClick={() => setIsEditingOrganizer(true)}>
+    <UsersIcon className="info-icon" />
+    {isEditingOrganizer ? (
+      <input
+        autoFocus
+        value={editedOrganizer}
+        onChange={(e) => setEditedOrganizer(e.target.value)}
+        onBlur={() => saveField("organizer", editedOrganizer, setIsEditingOrganizer)}
+        onKeyDown={(e) => handleKey(e, () => saveField("organizer", editedOrganizer, setIsEditingOrganizer), () => setIsEditingOrganizer(false))}
+      />
+    ) : (
+      <span><b>Organizador:</b> {editedOrganizer || "N/A"}</span>
+    )}
+  </div>
+
+  {/* Local */}
+  <div onDoubleClick={() => setIsEditingLocal(true)}>
+    <MapPinIcon className="info-icon" />
+    {isEditingLocal ? (
+      <input
+        autoFocus
+        value={editedLocal}
+        onChange={(e) => setEditedLocal(e.target.value)}
+        onBlur={() => saveField("local", editedLocal, setIsEditingLocal)}
+        onKeyDown={(e) => handleKey(e, () => saveField("local", editedLocal, setIsEditingLocal), () => setIsEditingLocal(false))}
+      />
+    ) : (
+      <span><b>Local:</b> {editedLocal || ""}</span>
+    )}
+  </div>
+
+  {/* Tipo */}
+  <div onDoubleClick={() => setIsEditingType(true)}>
+    <TagIcon className="info-icon" />
+    {isEditingType ? (
+      <input
+        autoFocus
+        value={editedType}
+        onChange={(e) => setEditedType(e.target.value)}
+        onBlur={() => saveField("type", editedType, setIsEditingType)}
+        onKeyDown={(e) => handleKey(e, () => saveField("type", editedType, setIsEditingType), () => setIsEditingType(false))}
+      />
+    ) : (
+      <span><b>Tipo:</b> {editedType || "N/A"}</span>
+    )}
+  </div>
+
+  {/* Formato */}
+  <div onDoubleClick={() => setIsEditingFormat(true)}>
+    <ComputerDesktopIcon className="info-icon" />
+    {isEditingFormat ? (
+      <input
+        autoFocus
+        value={editedFormat}
+        onChange={(e) => setEditedFormat(e.target.value)}
+        onBlur={() => saveField("format", editedFormat, setIsEditingFormat)}
+        onKeyDown={(e) => handleKey(e, () => saveField("format", editedFormat, setIsEditingFormat), () => setIsEditingFormat(false))}
+      />
+    ) : (
+      <span><b>Formato:</b> {editedFormat || "N/A"}</span>
+    )}
+  </div>
+
+  {/* Prioridade */}
+  <div onDoubleClick={() => setIsEditingPriority(true)}>
+    <ExclamationTriangleIcon className="info-icon" />
+    {isEditingPriority ? (
+      <select
+        autoFocus
+        value={editedPriority}
+        onChange={(e) => setEditedPriority(e.target.value)}
+        onBlur={() => saveField("priority", editedPriority, setIsEditingPriority)}
+        onKeyDown={(e) => handleKey(e, () => saveField("priority", editedPriority, setIsEditingPriority), () => setIsEditingPriority(false))}
+      >
+        <option value="ALTA">ALTA</option>
+        <option value="MÉDIA">MÉDIA</option>
+        <option value="BAIXA">BAIXA</option>
+      </select>
+    ) : (
+      <span>
+        <b>Prioridade:</b>{" "}
+        <span style={{
+          color: editedPriority === 'ALTA' ? '#d32f2f' :
+                 editedPriority === 'MÉDIA' ? '#ed6c02' : '#388e3c',
+          fontWeight: 'bold'
+        }}>{editedPriority || "N/A"}</span>
+      </span>
+    )}
+  </div>
+
+  {/* Orçamento */}
+  <div onDoubleClick={() => setIsEditingBudget(true)}>
+    <CurrencyDollarIcon className="info-icon" />
+    {isEditingBudget ? (
+      <input
+        autoFocus
+        type="number"
+        step="0.01"
+        value={editedBudget}
+        onChange={(e) => setEditedBudget(e.target.value)}
+        onBlur={() => saveField("estimatedBudget", Number(editedBudget) || 0, setIsEditingBudget)}
+        onKeyDown={(e) => handleKey(e, () => saveField("estimatedBudget", Number(editedBudget) || 0, setIsEditingBudget), () => setIsEditingBudget(false))}
+      />
+    ) : (
+      <span><b>Orçamento:</b> {Number(editedBudget || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
+    )}
+  </div>
+
+  {/* Participantes */}
+  <div onDoubleClick={() => setIsEditingParticipants(true)}>
+    <UserGroupIcon className="info-icon" />
+    {isEditingParticipants ? (
+      <input
+        autoFocus
+        type="number"
+        step="1"
+        value={editedParticipants}
+        onChange={(e) => setEditedParticipants(e.target.value)}
+        onBlur={() => saveField("participants", Number(editedParticipants) || 0, setIsEditingParticipants)}
+        onKeyDown={(e) => handleKey(e, () => saveField("participants", Number(editedParticipants) || 0, setIsEditingParticipants), () => setIsEditingParticipants(false))}
+      />
+    ) : (
+      <span><b>Participantes:</b> {editedParticipants || "N/A"}</span>
+    )}
+  </div>
+
+  {/* Centro de Custo */}
+  <div onDoubleClick={() => setIsEditingCostCenter(true)}>
+    <BuildingOfficeIcon className="info-icon" />
+    {isEditingCostCenter ? (
+      <input
+        autoFocus
+        value={editedCostCenter}
+        onChange={(e) => setEditedCostCenter(e.target.value)}
+        onBlur={() => saveField("costCenter", editedCostCenter, setIsEditingCostCenter)}
+        onKeyDown={(e) => handleKey(e, () => saveField("costCenter", editedCostCenter, setIsEditingCostCenter), () => setIsEditingCostCenter(false))}
+      />
+    ) : (
+      <span><b>Centro de Custo:</b> {editedCostCenter || "N/A"}</span>
+    )}
+  </div>
+</div>
+
 
             {/* Descrição */}
             <section className="section-v2">
