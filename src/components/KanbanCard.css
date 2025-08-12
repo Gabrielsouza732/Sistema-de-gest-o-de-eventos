@@ -83,185 +83,236 @@
   font-size: 15px;
   color: #374151;
   background: #fff;
-  border-radius: 4px;
-  padding: 9px 12px;
-  min-height: 60px;
-  cursor: pointer;
   border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 64px;
+  white-space: pre-wrap;
 }
 .description-textarea-v2 {
   width: 100%;
-  min-height: 60px;
-  font-size: 15px;
-  border-radius: 4px;
+  min-height: 96px;
+  border-radius: 8px;
   border: 1px solid #e5e7eb;
-  padding: 9px 12px;
-  resize: vertical;
+  padding: 10px 12px;
+  outline: none;
+  font-size: 14px;
 }
 
 .checklist-list-v2 {
-  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .checklist-item-v2 {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 8px;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 7px;
-  padding: 2px 0;
-  font-size: 14px;
+  background: #fff;
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+  padding: 10px 12px;
 }
 .checklist-item-v2 input[type="checkbox"] {
-  accent-color: #4a6da7;
+  width: 16px;
+  height: 16px;
 }
 .checklist-done-v2 {
   text-decoration: line-through;
-  color: #aaa;
+  color: #94a3b8;
 }
 .delete-checklist-v2 {
-  background: none;
   border: none;
-  color: #d33;
-  font-size: 16px;
-  margin-left: 7px;
+  background: transparent;
+  color: #ef4444;
   cursor: pointer;
-  transition: color 0.2s;
+  padding: 4px 6px;
+  border-radius: 6px;
 }
 .delete-checklist-v2:hover {
-  color: #a00;
+  background: #fee2e2;
 }
+
 .checklist-add-v2 {
   display: flex;
   gap: 8px;
-  margin-top: 7px;
+  margin-top: 10px;
 }
-.checklist-add-v2 input {
+.checklist-add-v2 input[type="text"] {
   flex: 1;
-  padding: 6px 10px;
-  border-radius: 4px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  outline: none;
 }
 .add-btn-v2 {
-  background: #16a34a;
-  color: #fff;
-  font-weight: 600;
+  background: #6366f1;
+  color: white;
   border: none;
-  border-radius: 4px;
-  padding: 7px 16px;
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.18s;
 }
 .add-btn-v2:hover {
-  background: #15803d;
+  background: #4f46e5;
 }
 
 .comments-list-v2 {
-  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 .comment-item-v2 {
   display: flex;
-  align-items: flex-start;
   gap: 10px;
-  margin-bottom: 13px;
+  align-items: flex-start;
 }
 .comment-avatar-v2 {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
+  background: #e5e7eb;
   border-radius: 50%;
-  background: #6366f1;
-  color: white;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 1rem;
-  flex-shrink: 0;
+  font-weight: 600;
+  color: #374151;
 }
 .comment-author-v2 {
-  font-weight: 500;
-  color: #222;
+  font-weight: 600;
+  color: #1f2937;
 }
 .comment-date-v2 {
-  font-weight: 400;
-  color: #888;
   font-size: 12px;
-  margin-left: 8px;
+  color: #6b7280;
+  margin-left: 6px;
 }
 .comment-text-v2 {
-  margin-top: 2px;
-  font-size: 14px;
-  color: #444;
+  color: #374151;
 }
 .comment-add-v2 {
   display: flex;
   gap: 8px;
+  margin-top: 8px;
 }
-.comment-add-v2 input {
+.comment-add-v2 input[type="text"] {
   flex: 1;
-  padding: 6px 10px;
-  border-radius: 4px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-}
-.empty-message-v2 {
-  color: #98a1b2;
-  font-size: 14px;
-  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  outline: none;
 }
 
 .members-list-v2 {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
 }
 .member-card-v2 {
   display: flex;
+  gap: 10px;
   align-items: center;
-  gap: 13px;
-  background: #f1f5f9;
-  border-radius: 8px;
-  padding: 7px 15px;
+  background: #fff;
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+  padding: 10px 12px;
 }
 .member-avatar-v2 {
   width: 32px;
   height: 32px;
+  background: #e5e7eb;
   border-radius: 50%;
-  background: #4a6da7;
-  color: #fff;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 1.1rem;
-  flex-shrink: 0;
+  font-weight: 600;
+  color: #374151;
 }
 .member-name-v2 {
   font-weight: 600;
-  color: #222;
+  color: #1f2937;
 }
 .member-role-v2 {
-  font-size: 13px;
-  color: #718096;
-}
-.add-member-btn-v2 {
-  background: #4a6da7;
-  color: #fff;
-  font-weight: 600;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 14px;
-  cursor: pointer;
-  transition: background 0.18s;
-  font-size: 0.98rem;
-  margin-left: auto;
-}
-.add-member-btn-v2:hover {
-  background: #374151;
+  font-size: 12px;
+  color: #6b7280;
 }
 
-@media (max-width: 700px) {
-  .modal-content { max-width: 98vw; }
-  .modal-header-v2, .modal-grid-v2, .section-v2 { padding-left: 4vw; padding-right: 4vw; }
-  .modal-grid-v2 { grid-template-columns: 1fr; }
+.empty-message-v2 {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* NOVOS estilos para selects de responsável */
+.assignee-select,
+.assignee-select-inline {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #1f2937;
+  border-radius: 8px;
+  padding: 8px 10px;
+  outline: none;
+  cursor: pointer;
+  max-width: 220px;
+}
+.assignee-select-inline {
+  max-width: 200px;
+}
+.assignee-select:focus,
+.assignee-select-inline:focus {
+  border-color: #c7c9d1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+.assignee-select option,
+.assignee-select-inline option {
+  background: #ffffff;
+  color: #111827;
+}
+
+/* Overlay básico (caso não exista no seu CSS) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 32px;
+  z-index: 50;
+}
+
+/* Card base (resumo) */
+.kanban-card {
+  background: #ffffff;
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(30,34,90,0.03);
+  cursor: pointer;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+.card-title-input {
+  font-size: 15px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px 8px;
+  outline: none;
+}
+.delete-button {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  margin-right: 6px;
 }
