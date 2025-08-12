@@ -121,10 +121,14 @@ export const fetchComments = async (eventId) => {
   }
 };
 
-export const addComment = async (commentData) => {
+export const addComment = async ({ eventId, text, authorId }) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/comments`, commentData);
-    return response.data;
+    const response = await axios.post(`${API_BASE_URL}/comments`, {
+      eventId,
+      text,
+      authorId,
+    });
+    return response.data; // esperado: { id, text, createdAt, author: { id, name } }
   } catch (error) {
     console.error("Erro ao adicionar comentário:", error);
     throw error;

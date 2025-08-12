@@ -316,3 +316,33 @@
   cursor: pointer;
   margin-right: 6px;
 }
+
+/* Scroll do conteúdo quando o card estiver expandido/modal */
+.kanban-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* garante altura máxima do modal */
+}
+
+.kanban-modal-body {
+  flex: 1 1 auto;
+  max-height: 70vh;              /* ajuste fino conforme seu layout */
+  overflow-y: auto;               /* scroll vertical */
+  padding-right: 8px;             /* espaço para o scrollbar */
+}
+
+/* Garantir que o checkbox receba o clique */
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checklist-item input[type="checkbox"] {
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.checklist-text {
+  line-height: 1.4;
+}
